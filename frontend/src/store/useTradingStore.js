@@ -24,7 +24,7 @@ const useTradingStore = create((set, get) => ({
     try {
       const created = await api.createTrade(data);
       set((state) => ({
-        operations: [...state.operations, { ...created, isEditing: false }],
+        operations: [{ ...created, isEditing: false }, ...state.operations],
       }));
     } catch (err) {
       set({ error: err.message });

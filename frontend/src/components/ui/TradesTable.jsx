@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Skeleton from '@mui/material/Skeleton';
+import Pagination from '@mui/material/Pagination';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded';
 import TradeRow from './TradeRow';
@@ -13,40 +14,45 @@ const COLUMNS = [
   'Take Profit', 'Stop Loss', 'Señal', 'Resultado', 'Observaciones', 'Acciones',
 ];
 
+const PAGE_SIZE = 10;
+
 // Clave en localStorage: ausente = nunca vio el tour (o borró todas las ops)
 //                        presente = ya lo vio en esta "era de sin operaciones"
 const TOUR_KEY = 'tt-tour-shown';
 
 function TradesTable({ loading }) {
   const operations = useTradingStore((s) => s.operations);
-  const tourShown = useRef(false);   // guard en-memoria para re-renders dentro de la misma sesión
+  const tourShown  = useRef(false);   // guard en-memoria para re-renders dentro de la misma sesión
 
   // ── Estado del modal ───────────────────────────────────────────────────────
   const [modal, setModal] = useState({ open: false, trade: null, isDeposit: false });
+  const [page,  setPage]  = useState(1);
 
-  const openNew = () => setModal({ open: true, trade: null, isDeposit: false });
-  const openDeposit = () => setModal({ open: true, trade: null, isDeposit: true });
-  const openEdit = (trade) => setModal({ open: true, trade, isDeposit: trade.orderType === 'Depósito' });
-  const closeModal = () => setModal((m) => ({ ...m, open: false }));
+  const openNew     = () => { setModal({ open: true, trade: null, isDeposit: false }); setPage(1); };
+  const openDeposit = () => { setModal({ open: true, trade: null, isDeposit: true  }); setPage(1); };
+  const openEdit    = (trade) => setModal({ open: true, trade, isDeposit: trade.orderType === 'Depósito' });
+  const closeModal  = () => setModal((m) => ({ ...m, open: false }));
+
+  // Páginas totales; si la página activa queda vacía tras un borrado, la corrige
+  const totalPages = Math.max(1, Math.ceil(operations.length / PAGE_SIZE));
+  const safePage   = Math.min(page, totalPages);
+  const paginated  = operations.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  const from = operations.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
+  const to   = Math.min(safePage * PAGE_SIZE, operations.length);
 
   // ── Tour: solo cuando no hay operaciones Y aún no se mostró en esta "era"
-  // Se muestra la primera vez (sin ops). En cuanto el usuario registra una
-  // operación se borra el flag → si algún día las borra todas, vuelve a salir.
   useEffect(() => {
     if (loading) return;
 
     if (operations.length > 0) {
-      // El usuario ya tiene operaciones: borrar el flag para que el tour
-      // pueda volver a aparecer si algún día elimina todo.
       localStorage.removeItem(TOUR_KEY);
       tourShown.current = false;
       return;
     }
 
-    // Sin operaciones: comprobar si ya se mostró (ref en-memoria O localStorage)
     if (tourShown.current || localStorage.getItem(TOUR_KEY)) return;
 
-    // Marcar como mostrado en ambas capas antes de lanzarlo
     tourShown.current = true;
     localStorage.setItem(TOUR_KEY, '1');
 
@@ -55,9 +61,7 @@ function TradesTable({ loading }) {
       overlayOpacity: 0.75,
       smoothScroll: true,
       showProgress: true,
-      // No se puede cerrar con clic en overlay ni con la X
       allowClose: false,
-      // Solo botones Siguiente / Anterior / Finalizar — sin X
       showButtons: ['next', 'previous'],
       nextBtnText: 'Siguiente →',
       prevBtnText: '← Anterior',
@@ -91,8 +95,6 @@ function TradesTable({ loading }) {
     });
 
     setTimeout(() => {
-      // Quita el foco de cualquier botón antes de iniciar
-      // para evitar el warning aria-hidden en el #root
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur();
       }
@@ -129,7 +131,7 @@ function TradesTable({ loading }) {
           </thead>
           <tbody>
             {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
+              Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
                   {COLUMNS.map((col) => (
                     <td key={col} className="tt-trades-table__th">
@@ -145,13 +147,44 @@ function TradesTable({ loading }) {
                 </td>
               </tr>
             ) : (
-              operations.map((trade) => (
+              paginated.map((trade) => (
                 <TradeRow key={trade.id} trade={trade} onEdit={openEdit} />
               ))
             )}
           </tbody>
         </table>
       </div>
+
+      {/* ── Paginación ── */}
+      {!loading && operations.length > PAGE_SIZE && (
+        <div className="tt-trades-table__pagination">
+          <span className="tt-trades-table__pagination-info">
+            {from}–{to} de {operations.length} operaciones
+          </span>
+          <Pagination
+            count={totalPages}
+            page={safePage}
+            onChange={(_, value) => setPage(value)}
+            size="small"
+            shape="rounded"
+            sx={{
+              '& .MuiPaginationItem-root': {
+                fontSize: '0.75rem',
+                color: '#6d28d9',
+                borderColor: '#ddd6fe',
+              },
+              '& .MuiPaginationItem-root.Mui-selected': {
+                backgroundColor: '#7c3aed',
+                color: '#fff',
+                '&:hover': { backgroundColor: '#6d28d9' },
+              },
+              '& .MuiPaginationItem-root:hover': {
+                backgroundColor: '#ede9fe',
+              },
+            }}
+          />
+        </div>
+      )}
 
       {/* ── Modal de formulario ──
            key cambia cada vez que el modal abre con un contexto distinto

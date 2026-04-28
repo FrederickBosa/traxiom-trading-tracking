@@ -25,7 +25,9 @@ function TradeRow({ trade, onEdit }) {
             +${(trade.result || 0).toFixed(2)}
           </span>
         </td>
-        <td className="tt-trade-row__cell tt-trade-row__cell--full">{trade.observations || '—'}</td>
+        <td className="tt-trade-row__cell tt-trade-row__cell--full">
+          <div className="tt-trade-row__obs">{trade.observations || '—'}</div>
+        </td>
         <td className="tt-trade-row__cell tt-trade-row__cell--actions">
           <button className="tt-btn-icon" onClick={() => onEdit(trade)} title="Editar" aria-label="Editar">
             <EditRoundedIcon sx={{ fontSize: 16 }} />
@@ -45,7 +47,7 @@ function TradeRow({ trade, onEdit }) {
       <td className="tt-trade-row__cell">
         <span className="tt-trade-row__pair-badge">{trade.pair || '—'}</span>
       </td>
-      <td className="tt-trade-row__cell tt-trade-row__cell--mono">{trade.risk}%</td>
+      <td className="tt-trade-row__cell tt-trade-row__cell--mono">{trade.risk}</td>
       <td className="tt-trade-row__cell tt-trade-row__cell--mono">{trade.entryPoint}</td>
       <td className="tt-trade-row__cell tt-trade-row__cell--mono">{trade.takeProfit}</td>
       <td className="tt-trade-row__cell tt-trade-row__cell--mono">{trade.stopLoss}</td>
@@ -55,7 +57,9 @@ function TradeRow({ trade, onEdit }) {
           {resultDisplay}
         </span>
       </td>
-      <td className="tt-trade-row__cell tt-trade-row__cell--full">{trade.observations || '—'}</td>
+      <td className="tt-trade-row__cell tt-trade-row__cell--full">
+          <div className="tt-trade-row__obs">{trade.observations || '—'}</div>
+        </td>
       <td className="tt-trade-row__cell tt-trade-row__cell--actions">
         <button className="tt-btn-icon" onClick={() => onEdit(trade)} title="Editar" aria-label="Editar">
           <EditRoundedIcon sx={{ fontSize: 16 }} />

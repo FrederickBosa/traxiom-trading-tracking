@@ -127,6 +127,16 @@ $sectionSpecificName: "trade-row";
     border-radius: 20px;
   }
 
+  // ─── OBSERVATIONS ────────────────────────────────────────────────────────
+
+  &__obs {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5;
+  }
+
   // ─── PAIR BADGE ───────────────────────────────────────────────────────────
 
   &__pair-badge {
