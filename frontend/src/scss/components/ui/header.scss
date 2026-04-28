@@ -1,0 +1,243 @@
+@use "sass:color";
+@use "../../settings/variables";
+@use "../../tools/media-query";
+
+$sectionSpecificName: "header";
+
+.#{variables.$component}-#{$sectionSpecificName} {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 56px;
+  padding: 0 16px 0 16px;
+
+  @include media-query.medias(desktop) {
+    padding: 0 24px;
+  }
+  background-color: variables.$bg-card;
+  border-bottom: 1px solid variables.$border-subtle;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 1px 0 variables.$border-subtle;
+
+  // ─── HAMBURGER (solo mobile/tablet) ──────────────────────────────────────
+
+  &__hamburger {
+    display: none;
+    margin-right: auto;
+
+    @include media-query.medias(mobile_tablet) {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      color: variables.$text-secondary;
+      border: 1px solid variables.$border-subtle;
+      transition: background-color 0.12s ease, color 0.12s ease;
+      flex-shrink: 0;
+
+      &:hover {
+        background-color: variables.$color-accent-lighter;
+        color: variables.$color-accent;
+      }
+    }
+  }
+
+  // ─── BRAND ────────────────────────────────────────────────────────────────
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__brand-icon {
+    display: flex;
+    align-items: center;
+    color: variables.$color-accent;
+  }
+
+  &__brand-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: variables.$text-primary;
+    letter-spacing: -0.02em;
+  }
+
+  &__brand-version {
+    font-size: 0.6875rem;
+    color: variables.$text-muted;
+    background-color: variables.$color-accent-lighter;
+    border: 1px solid variables.$border-default;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: variables.$font-mono;
+    font-weight: 600;
+    color: variables.$color-accent;
+  }
+
+  // ─── PROFILE TRIGGER ──────────────────────────────────────────────────────
+
+  &__profile {
+    position: relative;
+  }
+
+  &__trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 0.12s ease, border-color 0.12s ease;
+
+    &:hover,
+    &--open {
+      background-color: variables.$color-accent-lighter;
+      border-color: variables.$border-default;
+    }
+
+    &:focus-visible {
+      outline: 2px solid variables.$color-accent;
+      outline-offset: 2px;
+    }
+  }
+
+  &__avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, variables.$color-accent, #5b21b6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: 0.04em;
+  }
+
+  &__trigger-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: variables.$text-primary;
+    white-space: nowrap;
+  }
+
+  &__chevron {
+    display: flex;
+    align-items: center;
+    color: variables.$text-muted;
+  }
+
+  // ─── DROPDOWN CARD ────────────────────────────────────────────────────────
+
+  &__dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 270px;
+    background-color: variables.$bg-card;
+    border: 1px solid variables.$border-default;
+    border-radius: 12px;
+    box-shadow: variables.$shadow-dropdown;
+    overflow: hidden;
+    animation: tt-slideDown 0.15s ease forwards;
+  }
+
+  &__dropdown-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: linear-gradient(135deg, variables.$color-accent-lighter, variables.$bg-card);
+    border-bottom: 1px solid variables.$border-subtle;
+  }
+
+  &__dropdown-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, variables.$color-accent, #5b21b6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: 0.04em;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+  }
+
+  &__dropdown-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__dropdown-fullname {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: variables.$text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__dropdown-role {
+    font-size: 0.6875rem;
+    color: variables.$color-accent;
+    font-weight: 500;
+  }
+
+  &__dropdown-divider {
+    height: 1px;
+    background-color: variables.$border-subtle;
+    margin: 4px 0;
+  }
+
+  &__dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 0.8125rem;
+    color: variables.$text-secondary;
+    text-align: left;
+    transition: background-color 0.1s ease, color 0.1s ease;
+
+    &:hover {
+      background-color: variables.$color-accent-lighter;
+      color: variables.$color-accent;
+    }
+  }
+
+  &__dropdown-item-icon {
+    display: flex;
+    align-items: center;
+    color: variables.$text-muted;
+  }
+
+  &__dropdown-item--danger {
+    color: variables.$color-loss;
+
+    &:hover {
+      background-color: color.adjust(variables.$color-loss, $lightness: 48%);
+      color: variables.$color-loss;
+    }
+
+    .tt-header__dropdown-item-icon {
+      color: variables.$color-loss;
+    }
+  }
+}

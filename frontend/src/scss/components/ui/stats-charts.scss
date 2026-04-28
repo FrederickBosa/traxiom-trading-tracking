@@ -1,0 +1,124 @@
+@use "../../settings/variables";
+
+// ─── BALANCE GAUGE ───────────────────────────────────────────────────────────
+
+.tt-balance-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+
+  &__wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  &__center {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  &__pct {
+    font-size: 1.625rem;
+    font-weight: 800;
+    font-family: variables.$font-mono;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  &__sublabel {
+    font-size: 0.5625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: variables.$text-muted;
+    font-weight: 700;
+    margin-top: 3px;
+  }
+
+  &__scale {
+    display: flex;
+    justify-content: space-between;
+    width: 78%;
+    font-size: 0.5625rem;
+    color: variables.$text-muted;
+    font-family: variables.$font-mono;
+    font-weight: 600;
+    margin-top: -2px;
+  }
+}
+
+// ─── PAIRS DONUT ─────────────────────────────────────────────────────────────
+
+.tt-pairs-donut {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  &--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 130px;
+    font-size: 0.75rem;
+    color: variables.$text-muted;
+    font-style: italic;
+  }
+
+  &__legend {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 4px 0;
+  }
+
+  &__legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.6875rem;
+  }
+
+  &__legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  &__legend-name {
+    flex: 1;
+    color: variables.$text-secondary;
+    font-family: variables.$font-mono;
+    font-weight: 600;
+    font-size: 0.75rem;
+  }
+
+  &__legend-count {
+    color: variables.$text-muted;
+    font-size: 0.625rem;
+    font-family: variables.$font-mono;
+  }
+}
+
+// ─── STATS RADAR ─────────────────────────────────────────────────────────────
+
+.tt-stats-radar {
+  width: 100%;
+
+  &--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 150px;
+    font-size: 0.75rem;
+    color: variables.$text-muted;
+    font-style: italic;
+  }
+}

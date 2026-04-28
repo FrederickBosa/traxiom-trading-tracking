@@ -1,0 +1,8 @@
+@use "../../settings/variables";
+
+$sectionSpecificName: "equity-chart";
+
+.#{variables.$component}-#{$sectionSpecificName} {
+  width: 100%;
+  flex: 1;
+}

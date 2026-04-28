@@ -1,0 +1,119 @@
+@use "../../settings/variables";
+@use "../../tools/media-query";
+
+$sectionSpecificName: "trading-plan";
+
+.#{variables.$component}-#{$sectionSpecificName} {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 16px;
+
+  @include media-query.medias(tablet_desktop) {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 24px 28px;
+  }
+
+  &__checklist-section,
+  &__motivation-section {
+    background-color: variables.$bg-card;
+    border: 1px solid variables.$border-subtle;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: variables.$shadow-card;
+  }
+
+  &__checklist-section { flex: 2; }
+  &__motivation-section { flex: 1; }
+
+  &__section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: variables.$text-primary;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid variables.$border-subtle;
+    letter-spacing: -0.01em;
+  }
+
+  // ─── LISTA DE REGLAS (viñetas) ────────────────────────────────────────────
+
+  &__rules {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__rule-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    transition: background-color 0.12s ease;
+
+    &:hover { background-color: variables.$bg-row-hover; }
+  }
+
+  &__rule-bullet {
+    color: variables.$color-accent;
+    font-weight: 700;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+    line-height: 1.5;
+  }
+
+  &__rule-text {
+    font-size: 0.875rem;
+    color: variables.$text-primary;
+    line-height: 1.5;
+  }
+
+  &__motivation-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  &__motivation-quote {
+    font-size: 0.9375rem;
+    color: variables.$text-secondary;
+    font-style: italic;
+    line-height: 1.7;
+    padding: 12px 14px;
+    border-left: 3px solid variables.$color-accent;
+    background-color: variables.$color-accent-lighter;
+    border-radius: 0 8px 8px 0;
+  }
+
+  &__motivation-rules {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  &__motivation-rule {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.8125rem;
+    color: variables.$text-secondary;
+    line-height: 1.5;
+  }
+
+  &__motivation-rule-icon {
+    display: flex;
+    align-items: center;
+    color: variables.$color-accent;
+    min-width: 18px;
+    margin-top: 1px;
+  }
+}

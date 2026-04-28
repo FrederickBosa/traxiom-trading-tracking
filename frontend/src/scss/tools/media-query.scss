@@ -1,0 +1,25 @@
+@use "../settings/variables";
+
+@mixin medias($media) {
+  @if $media == mobile {
+    @media (max-width: calc(#{variables.$tablet} - 1px)) {
+      @content;
+    }
+  } @else if $media == tablet {
+    @media (min-width: #{variables.$tablet}) and (max-width: calc(#{variables.$desktop} - 1px)) {
+      @content;
+    }
+  } @else if $media == desktop {
+    @media (min-width: #{variables.$desktop}) {
+      @content;
+    }
+  } @else if $media == mobile_tablet {
+    @media (max-width: calc(#{variables.$desktop} - 1px)) {
+      @content;
+    }
+  } @else if $media == tablet_desktop {
+    @media (min-width: #{variables.$tablet}) {
+      @content;
+    }
+  }
+}

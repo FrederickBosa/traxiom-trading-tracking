@@ -1,0 +1,22 @@
+// MAIN SCSS — ITCSS import order
+// ─────────────────────────────────────────────────────────────────────────────
+
+@use "settings/variables";
+@use "tools/media-query";
+@use "generic/reset";
+@use "objects/buttons";
+@use "module";
+
+// UI atoms
+@use "components/ui/header";
+@use "components/ui/sidebar";
+@use "components/ui/equity-chart";
+@use "components/ui/activity-heatmap";
+@use "components/ui/stats-charts";
+@use "components/ui/trade-row";
+@use "components/ui/trades-table";
+
+// Sections
+@use "components/sections/dashboard";
+@use "components/sections/trading-plan";
+@use "components/sections/login";

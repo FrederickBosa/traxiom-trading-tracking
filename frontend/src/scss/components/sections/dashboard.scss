@@ -1,0 +1,150 @@
+@use "../../settings/variables";
+@use "../../tools/media-query";
+
+$sectionSpecificName: "dashboard";
+
+.#{variables.$component}-#{$sectionSpecificName} {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 16px;
+
+  @include media-query.medias(tablet_desktop) {
+    padding: 24px 28px;
+  }
+
+  // ─── TOPBAR (two separate 50/50 cards) ──────────────────────────────────
+
+  &__topbar {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+
+    @include media-query.medias(tablet_desktop) {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  &__balance-block {
+    background-color: variables.$bg-card;
+    border: 1px solid variables.$border-subtle;
+    border-radius: 16px;
+    padding: 28px 32px;
+    box-shadow: variables.$shadow-card;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+  }
+
+  &__balance-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: variables.$text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  &__balance-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    font-family: variables.$font-mono;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: variables.$text-primary;
+  }
+
+  &__balance-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  &__balance-initial {
+    font-size: 0.6875rem;
+    color: variables.$text-muted;
+    font-family: variables.$font-mono;
+  }
+
+  &__pnl {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    font-family: variables.$font-mono;
+    padding: 2px 8px;
+    border-radius: 20px;
+
+    &--profit {
+      background-color: rgba(variables.$color-profit, 0.1);
+      color: variables.$color-profit;
+    }
+
+    &--loss {
+      background-color: rgba(variables.$color-loss, 0.1);
+      color: variables.$color-loss;
+    }
+
+    &--neutral {
+      background-color: variables.$color-accent-lighter;
+      color: variables.$text-muted;
+    }
+  }
+
+  &__chart-block {
+    background-color: variables.$bg-card;
+    border: 1px solid variables.$border-subtle;
+    border-radius: 16px;
+    padding: 16px 20px 8px;
+    box-shadow: variables.$shadow-card;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__chart-block-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: variables.$text-secondary;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+
+  // ─── STATS ROW (3 equal cards) ────────────────────────────────────────────
+
+  &__stats-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+
+    @include media-query.medias(tablet_desktop) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  &__stat-card {
+    background-color: variables.$bg-card;
+    border: 1px solid variables.$border-subtle;
+    border-radius: 16px;
+    padding: 20px 24px 16px;
+    box-shadow: variables.$shadow-card;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 260px;
+  }
+
+  &__stat-card-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: variables.$text-secondary;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+
+  // ─── TABLE WRAPPER ────────────────────────────────────────────────────────
+
+  &__table-wrapper { width: 100%; }
+}

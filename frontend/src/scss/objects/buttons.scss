@@ -1,0 +1,129 @@
+@use "sass:color";
+@use "../settings/variables";
+
+%btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.1s ease;
+
+  &:active { transform: scale(0.97); }
+
+  &:focus-visible {
+    outline: 2px solid variables.$color-accent;
+    outline-offset: 2px;
+  }
+
+  // Estado deshabilitado — aplica a todos los botones que extienden este %
+  &:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+// Purple CTA
+.#{variables.$component}-btn-primary {
+  @extend %btn-base;
+  background-color: variables.$color-accent;
+  color: #fff;
+  border: 1px solid variables.$color-accent;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+
+  &:hover {
+    background-color: color.scale(variables.$color-accent, $lightness: -10%);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+  }
+}
+
+// Secondary — outlined blue (for deposit)
+.#{variables.$component}-btn-secondary {
+  @extend %btn-base;
+  background-color: rgba(#2563eb, 0.06);
+  color: #2563eb;
+  border: 1px solid rgba(#2563eb, 0.25);
+
+  &:hover {
+    background-color: rgba(#2563eb, 0.12);
+    border-color: #2563eb;
+  }
+}
+
+// Ghost with border
+.#{variables.$component}-btn-ghost {
+  @extend %btn-base;
+  background-color: transparent;
+  color: variables.$text-secondary;
+  border: 1px solid variables.$border-default;
+
+  &:hover {
+    border-color: variables.$color-accent;
+    color: variables.$color-accent;
+    background-color: variables.$color-accent-lighter;
+  }
+}
+
+// Danger / delete
+.#{variables.$component}-btn-danger {
+  @extend %btn-base;
+  background-color: transparent;
+  color: variables.$color-loss;
+  border: 1px solid rgba(variables.$color-loss, 0.3);
+
+  &:hover {
+    background-color: rgba(variables.$color-loss, 0.07);
+    border-color: variables.$color-loss;
+  }
+}
+
+// Icon-only square — base + modifiers
+.#{variables.$component}-btn-icon {
+  @extend %btn-base;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: variables.$text-muted;
+  border: 1px solid transparent;
+  width: 32px;
+  height: 32px;
+
+  &:hover {
+    background-color: variables.$color-accent-lighter;
+    color: variables.$color-accent;
+    border-color: variables.$border-default;
+  }
+
+  // Purple filled — for save / confirm actions
+  &--primary {
+    background-color: variables.$color-accent;
+    color: #fff;
+    border-color: variables.$color-accent;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+
+    &:hover {
+      background-color: color.scale(variables.$color-accent, $lightness: -10%);
+      color: #fff;
+      border-color: color.scale(variables.$color-accent, $lightness: -10%);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+    }
+  }
+
+  // Subtle red on hover — for destructive actions
+  &--danger {
+    &:hover {
+      color: variables.$color-loss;
+      background-color: rgba(variables.$color-loss, 0.06);
+      border-color: rgba(variables.$color-loss, 0.25);
+    }
+  }
+}

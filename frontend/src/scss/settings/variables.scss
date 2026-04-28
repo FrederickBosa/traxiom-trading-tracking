@@ -1,0 +1,51 @@
+// VARIABLES
+// ─────────────────────────────────────────────────────────────────────────────
+$component: "tt";
+$componentSpecificName: "tracking-trading";
+$fullPrefix: "#{$component}-#{$componentSpecificName}";
+
+// ─── BACKGROUNDS (light content area) ────────────────────────────────────────
+$bg-base:      #f5f3ff;   // soft warm lavender
+$bg-card:      #ffffff;
+$bg-input:     #faf9ff;
+$bg-row-hover: #f9f7ff;
+
+// ─── BACKGROUNDS (sidebar / dark) ────────────────────────────────────────────
+$bg-sidebar:       #15122a;
+$bg-sidebar-hover: #1e1a38;
+
+// ─── BORDERS ─────────────────────────────────────────────────────────────────
+$border-subtle:  #ede9fe;
+$border-default: #ddd6fe;
+$border-strong:  #c4b5fd;
+
+// ─── TEXT (light area) ───────────────────────────────────────────────────────
+$text-primary:   #1e1b4b;
+$text-secondary: #6b7280;
+$text-muted:     #9ca3af;
+
+// ─── TEXT (sidebar / dark) ───────────────────────────────────────────────────
+$sidebar-text:        #e2dff7;
+$sidebar-text-muted:  #9b95b8;
+$sidebar-text-active: #c4b5fd;
+
+// ─── SEMANTIC COLORS ─────────────────────────────────────────────────────────
+$color-profit:        #059669;
+$color-loss:          #dc2626;
+$color-open:          #6b7280;
+$color-accent:        #7c3aed;
+$color-accent-light:  #ede9fe;
+$color-accent-lighter: #f5f3ff;
+
+// ─── SHADOWS ─────────────────────────────────────────────────────────────────
+$shadow-card:     0 1px 3px rgba(109, 77, 209, 0.07), 0 4px 16px rgba(109, 77, 209, 0.05);
+$shadow-dropdown: 0 8px 24px rgba(109, 77, 209, 0.18), 0 2px 8px rgba(0, 0, 0, 0.07);
+
+// ─── BREAKPOINTS ─────────────────────────────────────────────────────────────
+$mobile:  360px;
+$tablet:  768px;
+$desktop: 1264px;
+
+// ─── FONTS ───────────────────────────────────────────────────────────────────
+$font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+$font-mono: ui-monospace, 'Cascadia Code', Consolas, monospace;

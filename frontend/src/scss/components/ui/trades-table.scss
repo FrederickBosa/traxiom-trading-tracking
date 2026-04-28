@@ -1,0 +1,72 @@
+@use "../../settings/variables";
+@use "../../tools/media-query";
+
+$sectionSpecificName: "trades-table";
+
+.#{variables.$component}-#{$sectionSpecificName} {
+  background-color: variables.$bg-card;
+  border: 1px solid variables.$border-subtle;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: variables.$shadow-card;
+
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid variables.$border-subtle;
+    gap: 12px;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: variables.$text-primary;
+    letter-spacing: -0.01em;
+  }
+
+  &__scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar { height: 4px; }
+    &::-webkit-scrollbar-track { background: variables.$bg-base; }
+    &::-webkit-scrollbar-thumb { background: variables.$border-default; border-radius: 4px; }
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 960px;
+  }
+
+  &__header-row {
+    background-color: variables.$color-accent-lighter;
+  }
+
+  &__th {
+    padding: 10px 10px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: variables.$color-accent;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    text-align: left;
+    border-bottom: 1px solid variables.$border-default;
+    white-space: nowrap;
+  }
+
+  &__empty {
+    padding: 52px 16px;
+    text-align: center;
+    color: variables.$text-muted;
+    font-size: 0.875rem;
+  }
+}

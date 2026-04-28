@@ -1,0 +1,208 @@
+@use "sass:color";
+@use "../../settings/variables" as *;
+
+.tt-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $bg-sidebar;
+  padding: 1.5rem;
+
+  &__card {
+    width: 100%;
+    max-width: 420px;
+    background: $bg-card;
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+  }
+
+  // ─── BRAND ────────────────────────────────────────────────────────────────
+
+  &__brand {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  &__brand-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    margin: 0 auto 0.75rem;
+  }
+
+  &__title {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0 0 0.25rem;
+    letter-spacing: -0.02em;
+  }
+
+  &__subtitle {
+    color: $text-muted;
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  // ─── TABS ─────────────────────────────────────────────────────────────────
+
+  &__tabs {
+    display: flex;
+    background: $bg-base;
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 1.5rem;
+    gap: 4px;
+  }
+
+  &__tab {
+    flex: 1;
+    padding: 0.5rem;
+    border: none;
+    background: transparent;
+    border-radius: 7px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: $text-secondary;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: $font-body;
+
+    &--active {
+      background: $bg-card;
+      color: $color-accent;
+      box-shadow: $shadow-card;
+    }
+
+    &:not(&--active):hover {
+      color: $text-primary;
+    }
+  }
+
+  // ─── FORM ─────────────────────────────────────────────────────────────────
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+  }
+
+  // ─── REQUISITOS ───────────────────────────────────────────────────────────
+
+  &__requirements {
+    list-style: none;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    background: $bg-base;
+    border: 1px solid $border-subtle;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  &__req-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: $text-muted;
+    transition: color 0.2s ease;
+
+    svg {
+      flex-shrink: 0;
+      color: $border-strong;
+      transition: color 0.2s ease;
+    }
+
+    &--met {
+      color: $color-profit;
+
+      svg {
+        color: $color-profit;
+      }
+    }
+  }
+
+  // ─── ALERTAS ──────────────────────────────────────────────────────────────
+
+  &__alert {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    padding: 0.625rem 0.875rem;
+    border-radius: 8px;
+    margin: 0;
+    line-height: 1.4;
+
+    &--error {
+      color: $color-loss;
+      background: color.adjust($color-loss, $lightness: 48%);
+      border: 1px solid color.adjust($color-loss, $lightness: 38%);
+
+      svg { color: $color-loss; flex-shrink: 0; }
+    }
+
+    &--success {
+      color: $color-profit;
+      background: color.adjust($color-profit, $lightness: 47%);
+      border: 1px solid color.adjust($color-profit, $lightness: 38%);
+
+      svg { color: $color-profit; flex-shrink: 0; }
+    }
+  }
+
+  // ─── DIVIDER ──────────────────────────────────────────────────────────────
+
+  &__divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.25rem 0;
+    color: $text-muted;
+    font-size: 0.8125rem;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: $border-subtle;
+    }
+  }
+
+  // ─── BOTÓN GOOGLE ─────────────────────────────────────────────────────────
+
+  &__btn-google {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    padding: 0.65rem;
+    background: $bg-card;
+    border: 1.5px solid $border-default;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: $text-primary;
+    cursor: pointer;
+    font-family: $font-body;
+    transition: background 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: $bg-base;
+      border-color: $border-strong;
+    }
+
+    &:active {
+      background: $color-accent-light;
+    }
+  }
+}

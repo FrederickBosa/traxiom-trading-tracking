@@ -1,0 +1,119 @@
+@use "../../settings/variables";
+
+$sectionSpecificName: "activity-heatmap";
+
+.#{variables.$component}-#{$sectionSpecificName} {
+  width: 100%;
+
+  // ─── MONTH TITLE ─────────────────────────────────────────────────────────
+
+  &__month-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: variables.$text-secondary;
+    text-align: center;
+    text-transform: capitalize;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+
+  // ─── DAY-OF-WEEK HEADER ──────────────────────────────────────────────────
+
+  &__dow-row {
+    display: grid;
+    grid-template-columns: repeat(7, 30px);
+    gap: 2px;
+    margin: 0 auto 4px;
+    width: fit-content;
+  }
+
+  &__dow-label {
+    width: 30px;
+    text-align: center;
+    font-size: 0.5625rem;
+    font-weight: 700;
+    color: variables.$text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 0;
+  }
+
+  // ─── CALENDAR GRID ───────────────────────────────────────────────────────
+
+  &__cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 30px);
+    gap: 2px;
+    width: fit-content;
+    margin: 0 auto;
+  }
+
+  &__cal-empty {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+  }
+
+  &__cal-day {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    cursor: default;
+    position: relative;
+    transition: box-shadow 0.12s ease, filter 0.12s ease;
+    border: 1.5px solid transparent;
+
+    &:hover {
+      box-shadow: inset 0 0 0 1.5px rgba(124, 58, 237, 0.45);
+      filter: brightness(0.92);
+    }
+
+    &--today {
+      border-color: variables.$color-accent;
+    }
+  }
+
+  &__cal-num {
+    font-size: 0.6rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  &__cal-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    opacity: 0.8;
+  }
+
+  // ─── LEGEND ──────────────────────────────────────────────────────────────
+
+  &__cal-legend {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    span:not(.#{variables.$component}-#{$sectionSpecificName}__cal-legend-label) {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+  }
+
+  &__cal-legend-label {
+    font-size: 0.5625rem;
+    color: variables.$text-muted;
+    margin-right: 6px;
+    font-weight: 600;
+  }
+}

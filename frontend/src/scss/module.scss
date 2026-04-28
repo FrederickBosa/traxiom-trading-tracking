@@ -1,0 +1,125 @@
+@use "settings/variables";
+
+// ─── GLOBAL APP SHELL ────────────────────────────────────────────────────────
+.#{variables.$component}-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background-color: variables.$bg-base;
+  color: variables.$text-primary;
+}
+
+.#{variables.$component}-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.#{variables.$component}-main {
+  flex: 1;
+  overflow-y: auto;
+  background-color: variables.$bg-base;
+  display: flex;
+  flex-direction: column;
+
+  &__container {
+    max-width: 1250px;
+    width: 100%;
+    margin: 0 auto;
+    flex: 1;
+  }
+}
+
+// ─── PANTALLA DE CARGA INICIAL (auth loading) ────────────────────────────────
+.tt-app-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: variables.$bg-base;
+  color: variables.$text-secondary;
+  font-size: 1rem;
+}
+
+// ─── MUI DIALOG — ajustes globales ───────────────────────────────────────────
+// Padding superior del contenido cuando va precedido del título
+.MuiDialogTitle-root + .MuiDialogContent-root.MuiDialogContent-root {
+  padding-top: 20px;
+}
+
+// ─── DRIVER.JS — estilos del popover ─────────────────────────────────────────
+// Driver.js v1 gestiona su propio z-index internamente (muy alto),
+// NO se sobreescribe para no romper el stacking del overlay.
+
+.driver-popover {
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  max-width: 340px;
+}
+
+.driver-popover-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #1e1b4b;
+}
+
+.driver-popover-description {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.55;
+}
+
+// Botón Siguiente / ¡Empezar! → verde
+.driver-popover.driverjs-theme .driver-popover-footer .driver-popover-next-btn,
+.driver-popover .driver-popover-footer .driver-popover-next-btn {
+  background-color: #059669;
+  border-color: #059669;
+  color: #fff;
+  text-shadow: none;
+  border-radius: 7px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 6px 14px;
+
+  &:hover,
+  &:focus {
+    background-color: #047857;
+    border-color: #047857;
+    color: #fff;
+    text-shadow: none;
+  }
+}
+
+// Botón ← Anterior → lila
+.driver-popover.driverjs-theme .driver-popover-footer .driver-popover-prev-btn,
+.driver-popover .driver-popover-footer .driver-popover-prev-btn {
+  background-color: transparent;
+  border: 1px solid #ddd6fe;
+  color: #7c3aed;
+  text-shadow: none;
+  border-radius: 7px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 6px 14px;
+
+  &:hover,
+  &:focus { background-color: #f5f3ff; color: #7c3aed; text-shadow: none; }
+}
+
+// Barra de progreso
+.driver-popover-progress-text {
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+// ─── KEYFRAMES ───────────────────────────────────────────────────────────────
+@keyframes tt-fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes tt-slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
