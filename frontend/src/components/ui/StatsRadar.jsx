@@ -10,50 +10,67 @@ import {
 
 const COLORS = ['#7c3aed', '#f59e0b', '#0d9488'];
 
-function buildData(ops) {
-  const raw = ops.map((op) => {
-    const entry = parseFloat(op.entryPoint) || 0;
-    const tp    = parseFloat(op.takeProfit) || 0;
-    const sl    = parseFloat(op.stopLoss)   || 0;
-    const slDist = Math.abs(entry - sl);
-    const tpDist = Math.abs(tp - entry);
-    return {
-      pnlAbs: Math.abs(op.result || 0),
-      riesgo: parseFloat(op.risk) || 0,
-      rr:     slDist > 0 ? parseFloat((tpDist / slDist).toFixed(2)) : 0,
-      tpDist: parseFloat(tpDist.toFixed(5)),
-      slDist: parseFloat(slDist.toFixed(5)),
-    };
+// Agrupa las operaciones por par, calcula métricas promedio y
+// devuelve los top-3 pares por número de trades.
+function buildDataByPair(ops) {
+  // 1. Agrupar por par
+  const groups = {};
+  ops.forEach((op) => {
+    const pair = op.pair || '?';
+    if (!groups[pair]) groups[pair] = [];
+    groups[pair].push(op);
   });
 
+  // 2. Top-3 pares más operados
+  const top3 = Object.entries(groups)
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, 3)
+    .map(([pair, pairOps]) => {
+      const avg    = (fn) => pairOps.reduce((s, op) => s + (fn(op) || 0), 0) / pairOps.length;
+      const entry  = avg((op) => parseFloat(op.entryPoint));
+      const tp     = avg((op) => parseFloat(op.takeProfit));
+      const sl     = avg((op) => parseFloat(op.stopLoss));
+      const slDist = Math.abs(entry - sl);
+      const tpDist = Math.abs(tp - entry);
+      return {
+        pair,
+        pnlAbs: Math.abs(avg((op) => op.result)),
+        riesgo: avg((op) => parseFloat(op.risk)),
+        rr:     slDist > 0 ? tpDist / slDist : 0,
+        tpDist,
+        slDist,
+      };
+    });
+
+  // 3. Normalizar cada métrica a 0-100
   const keys   = ['pnlAbs', 'riesgo', 'rr', 'tpDist', 'slDist'];
   const labels = ['Resultado', 'Riesgo', 'R:R', 'TP', 'SL'];
-
-  // Normalize each column to 0–100 across the ops
-  const maxes = {};
-  keys.forEach((k) => { maxes[k] = Math.max(...raw.map((r) => r[k]), 0.001); });
-  const norm = raw.map((r) => {
-    const n = {};
-    keys.forEach((k) => { n[k] = Math.round((r[k] / maxes[k]) * 100); });
-    return n;
+  const maxes  = {};
+  keys.forEach((k) => {
+    maxes[k] = Math.max(...top3.map((g) => g[k]), 0.001);
   });
 
-  return labels.map((label, li) => {
+  const data = labels.map((label, li) => {
     const row = { metric: label };
-    norm.forEach((n, i) => { row[`op${i}`] = n[keys[li]]; });
+    top3.forEach((g, i) => {
+      row[`p${i}`] = Math.round((g[keys[li]] / maxes[keys[li]]) * 100);
+    });
     return row;
   });
+
+  return { data, pairs: top3.map((g) => g.pair) };
 }
 
 function StatsRadar({ operations }) {
-  // Use the last 3 operations (any status)
-  const last3 = operations.slice(-3);
-
-  if (!last3.length) {
-    return <div className="tt-stats-radar tt-stats-radar--empty" style={{ height: 205 }}>Sin operaciones</div>;
+  if (!operations.length) {
+    return (
+      <div className="tt-stats-radar tt-stats-radar--empty" style={{ height: 205 }}>
+        Sin operaciones
+      </div>
+    );
   }
 
-  const data = buildData(last3);
+  const { data, pairs } = buildDataByPair(operations);
 
   return (
     <div className="tt-stats-radar">
@@ -64,14 +81,14 @@ function StatsRadar({ operations }) {
             dataKey="metric"
             tick={{ fill: '#9ca3af', fontSize: 9, fontWeight: 600 }}
           />
-          {last3.map((op, i) => (
+          {pairs.map((pair, i) => (
             <Radar
-              key={op.id}
-              name={op.pair || `Op ${i + 1}`}
-              dataKey={`op${i}`}
+              key={pair}
+              name={pair}
+              dataKey={`p${i}`}
               stroke={COLORS[i]}
               fill={COLORS[i]}
-              fillOpacity={0}
+              fillOpacity={0.08}
               strokeWidth={2}
               dot={{ r: 3, fill: COLORS[i], strokeWidth: 0 }}
             />
