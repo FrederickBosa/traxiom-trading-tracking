@@ -16,13 +16,14 @@ const COLUMNS = [
 
 const PAGE_SIZE = 10;
 
-// Clave en localStorage: ausente = nunca vio el tour (o borró todas las ops)
-//                        presente = ya lo vio en esta "era de sin operaciones"
-const TOUR_KEY = 'tt-tour-shown';
-
 function TradesTable({ loading }) {
   const operations = useTradingStore((s) => s.operations);
-  const tourShown  = useRef(false);   // guard en-memoria para re-renders dentro de la misma sesión
+
+  // initialLoadDone: se activa la primera vez que el fetch completa.
+  // A partir de ahí ignoramos cambios en operations.length para no
+  // lanzar el tour si el usuario borra trades durante la sesión.
+  const initialLoadDone = useRef(false);
+  const tourShown       = useRef(false); // evita doble disparo por re-renders
 
   // ── Estado del modal ───────────────────────────────────────────────────────
   const [modal, setModal] = useState({ open: false, trade: null, isDeposit: false });
@@ -41,20 +42,17 @@ function TradesTable({ loading }) {
   const from = operations.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
   const to   = Math.min(safePage * PAGE_SIZE, operations.length);
 
-  // ── Tour: solo cuando no hay operaciones Y aún no se mostró en esta "era"
+  // ── Tour: se evalúa UNA sola vez, cuando el primer fetch termina.
+  // Si el usuario tiene trades → no tour.
+  // Si no tiene → tour. Borrar trades durante la sesión no lo reactiva.
   useEffect(() => {
-    if (loading) return;
+    if (loading) return;                   // fetch aún en curso
+    if (initialLoadDone.current) return;   // ya hicimos la revisión inicial
+    initialLoadDone.current = true;
 
-    if (operations.length > 0) {
-      localStorage.removeItem(TOUR_KEY);
-      tourShown.current = false;
-      return;
-    }
-
-    if (tourShown.current || localStorage.getItem(TOUR_KEY)) return;
-
+    if (operations.length > 0) return;     // tiene trades, no necesita el tour
+    if (tourShown.current) return;
     tourShown.current = true;
-    localStorage.setItem(TOUR_KEY, '1');
 
     const driverObj = driver({
       animate: true,
