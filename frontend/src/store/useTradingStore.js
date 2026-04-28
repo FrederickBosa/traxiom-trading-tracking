@@ -4,7 +4,7 @@ import * as api from '../services/api.js';
 const useTradingStore = create((set, get) => ({
   initialBalance: 0,
   operations: [],
-  loading: false,
+  loading: true,  // true desde el inicio → espera el primer fetch real
   error: null,
 
   fetchTrades: async () => {
