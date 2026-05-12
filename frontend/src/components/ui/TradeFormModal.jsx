@@ -29,15 +29,21 @@ const today = () => {
 
 const parseDecimal = (v) => {
   const n = parseFloat(String(v).replace(',', '.'));
-  return isNaN(n) ? '' : n;          // '' para que Yup lo detecte como vacío
+  return isNaN(n) ? '' : n;
 };
 
-const emptyTrade  = () => ({ pair: '', risk: '', entryPoint: '', takeProfit: '', stopLoss: '', orderType: 'Buy Market', signalSource: 'M71', result: '',  observations: '', createdAt: today() });
+const emptyTrade   = () => ({ pair: '', risk: '', entryPoint: '', takeProfit: '', stopLoss: '', orderType: 'Buy Market', signalSource: 'M71', result: '', observations: '', createdAt: today() });
 const emptyDeposit = () => ({ pair: 'Depósito', risk: 0, entryPoint: 0, takeProfit: 0, stopLoss: 0, orderType: 'Depósito', signalSource: 'M71', result: '', observations: '', createdAt: today() });
 
-// ─── Esquema Yup (solo para trades, no para depósitos) ────────────────────────
+// ─── Esquemas Yup ─────────────────────────────────────────────────────────────
+
+const dateField = Yup.string()
+  .required('Requerido')
+  .matches(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida');
 
 const tradeSchema = Yup.object({
+  createdAt: dateField,
+
   orderType: Yup.string()
     .required('Requerido')
     .oneOf(ORDER_TYPES, 'Tipo no válido'),
@@ -60,9 +66,9 @@ const tradeSchema = Yup.object({
     .typeError('Debe ser un número')
     .required('Requerido')
     .positive('Debe ser positivo')
-    .test('tp-buy',  'En compras el TP debe ser mayor al precio',  function (val) {
+    .test('tp-buy', 'En compras el TP debe ser mayor al precio', function (val) {
       const { orderType, entryPoint } = this.parent;
-      if (BUY_TYPES.includes(orderType))  return (val ?? 0) > (entryPoint ?? 0);
+      if (BUY_TYPES.includes(orderType)) return (val ?? 0) > (entryPoint ?? 0);
       return true;
     })
     .test('tp-sell', 'En ventas el TP debe ser menor al precio', function (val) {
@@ -75,9 +81,9 @@ const tradeSchema = Yup.object({
     .typeError('Debe ser un número')
     .required('Requerido')
     .positive('Debe ser positivo')
-    .test('sl-buy',  'En compras el SL debe ser menor al precio',  function (val) {
+    .test('sl-buy', 'En compras el SL debe ser menor al precio', function (val) {
       const { orderType, entryPoint } = this.parent;
-      if (BUY_TYPES.includes(orderType))  return (val ?? 0) < (entryPoint ?? 0);
+      if (BUY_TYPES.includes(orderType)) return (val ?? 0) < (entryPoint ?? 0);
       return true;
     })
     .test('sl-sell', 'En ventas el SL debe ser mayor al precio', function (val) {
@@ -96,6 +102,8 @@ const tradeSchema = Yup.object({
 });
 
 const depositSchema = Yup.object({
+  createdAt: dateField,
+
   result: Yup.number()
     .typeError('Debe ser un número')
     .required('Requerido')
@@ -136,8 +144,6 @@ function DecimalField({ value, onChange, label, error, helperText }) {
   );
 }
 
-// Select Autocomplete — {…params} limpio, sin readOnly ni slotProps.input.
-// disableClearable + no freeSolo garantiza que solo se guarden opciones válidas.
 function DropdownField({ value, onChange, options, label, error, helperText }) {
   return (
     <Autocomplete
@@ -172,9 +178,6 @@ function TradeFormModal({ open, onClose, trade, isDeposit }) {
 
   const isEdit = Boolean(trade);
 
-  // Lazy initializer: se ejecuta UNA sola vez al montar el componente.
-  // El padre (TradesTable) cambia el `key` cada vez que abre el modal con
-  // un contexto distinto → React remonta aquí con estado fresco sin useEffect.
   const [draft,  setDraft]  = useState(() =>
     trade ? { ...trade } : isDeposit ? emptyDeposit() : emptyTrade()
   );
@@ -183,7 +186,6 @@ function TradeFormModal({ open, onClose, trade, isDeposit }) {
 
   const set = (field, val) => {
     setDraft((p) => ({ ...p, [field]: val }));
-    // Limpia el error del campo al editar
     if (errors[field]) setErrors((e) => { const next = { ...e }; delete next[field]; return next; });
   };
 
@@ -207,7 +209,6 @@ function TradeFormModal({ open, onClose, trade, isDeposit }) {
       return;
     }
 
-    // _isEditing: extraída solo para excluirla del payload → prefijo _ indica intencional
     const { isEditing: _isEditing, ...payload } = data;
     setSaving(true);
     try {
@@ -216,8 +217,6 @@ function TradeFormModal({ open, onClose, trade, isDeposit }) {
       } else {
         await createOperation(payload);
       }
-      // Quitar el foco antes de cerrar para evitar el conflicto
-      // aria-hidden en #root vs focused element cuando el Dialog se desmonta
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur();
       }
@@ -231,7 +230,7 @@ function TradeFormModal({ open, onClose, trade, isDeposit }) {
     ? (isDeposit ? 'Editar Depósito'  : 'Editar Operación')
     : (isDeposit ? 'Nuevo Depósito'   : 'Nueva Operación');
 
-  const e = errors; // alias corto
+  const e = errors;
 
   return (
     <Dialog
@@ -251,6 +250,21 @@ function TradeFormModal({ open, onClose, trade, isDeposit }) {
       <DialogContent>
         {isDeposit ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Fecha */}
+            <TextField
+              type="date"
+              variant="outlined"
+              size="small"
+              label="Fecha"
+              fullWidth
+              value={draft.createdAt}
+              onChange={(ev) => set('createdAt', ev.target.value)}
+              error={!!e.createdAt}
+              helperText={e.createdAt}
+              slotProps={{ inputLabel: { shrink: true } }}
+              sx={fieldSx}
+            />
+
             <DecimalField
               label="Monto ($)"
               value={draft.result}
@@ -267,6 +281,24 @@ function TradeFormModal({ open, onClose, trade, isDeposit }) {
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px' }}>
+
+            {/* Fecha — ocupa ambas columnas, primera del formulario */}
+            <div style={{ gridColumn: '1 / -1' }}>
+              <TextField
+                type="date"
+                variant="outlined"
+                size="small"
+                label="Fecha"
+                fullWidth
+                value={draft.createdAt}
+                onChange={(ev) => set('createdAt', ev.target.value)}
+                error={!!e.createdAt}
+                helperText={e.createdAt}
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={fieldSx}
+              />
+            </div>
+
             {/* Tipo Orden */}
             <DropdownField
               label="Tipo Orden"
@@ -277,7 +309,7 @@ function TradeFormModal({ open, onClose, trade, isDeposit }) {
               helperText={e.orderType}
             />
 
-            {/* Par — freeSolo con lista FOREX_PAIRS */}
+            {/* Par */}
             <Autocomplete
               freeSolo
               disableClearable
@@ -301,19 +333,11 @@ function TradeFormModal({ open, onClose, trade, isDeposit }) {
               )}
             />
 
-            {/* Riesgo */}
-            <DecimalField label="Riesgo (%)"    value={draft.risk}       onChange={(v) => set('risk', v)}       error={!!e.risk}       helperText={e.risk} />
-
-            {/* Precio (antes Entrada) */}
+            <DecimalField label="Riesgo"        value={draft.risk}       onChange={(v) => set('risk', v)}       error={!!e.risk}       helperText={e.risk} />
             <DecimalField label="Precio"         value={draft.entryPoint} onChange={(v) => set('entryPoint', v)} error={!!e.entryPoint} helperText={e.entryPoint} />
-
-            {/* Take Profit */}
             <DecimalField label="Take Profit"    value={draft.takeProfit} onChange={(v) => set('takeProfit', v)} error={!!e.takeProfit} helperText={e.takeProfit} />
-
-            {/* Stop Loss */}
             <DecimalField label="Stop Loss"      value={draft.stopLoss}   onChange={(v) => set('stopLoss', v)}   error={!!e.stopLoss}   helperText={e.stopLoss} />
 
-            {/* Señal */}
             <DropdownField
               label="Señal"
               value={draft.signalSource}
@@ -323,10 +347,9 @@ function TradeFormModal({ open, onClose, trade, isDeposit }) {
               helperText={e.signalSource}
             />
 
-            {/* Resultado */}
             <DecimalField label="Resultado ($)"  value={draft.result}     onChange={(v) => set('result', v)}     error={!!e.result}     helperText={e.result} />
 
-            {/* Observaciones — ocupa ambas columnas */}
+            {/* Observaciones */}
             <div style={{ gridColumn: '1 / -1' }}>
               <TextField
                 variant="outlined" size="small" label="Observaciones" fullWidth multiline rows={2}

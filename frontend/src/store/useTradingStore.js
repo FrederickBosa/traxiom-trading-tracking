@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import * as api from '../services/api.js';
 
+// Ordena: fecha desc → id desc (desempate entre ops del mismo día)
+const sortDesc = (ops) =>
+  [...ops].sort((a, b) => {
+    const d = (b.createdAt || '').localeCompare(a.createdAt || '');
+    return d !== 0 ? d : (b.id || '').localeCompare(a.id || '');
+  });
+
 const useTradingStore = create((set, get) => ({
   initialBalance: 0,
   operations: [],
@@ -24,7 +31,7 @@ const useTradingStore = create((set, get) => ({
     try {
       const created = await api.createTrade(data);
       set((state) => ({
-        operations: [{ ...created, isEditing: false }, ...state.operations],
+        operations: sortDesc([{ ...created, isEditing: false }, ...state.operations]),
       }));
     } catch (err) {
       set({ error: err.message });
@@ -33,8 +40,8 @@ const useTradingStore = create((set, get) => ({
 
   updateOperation: async (id, data) => {
     set((state) => ({
-      operations: state.operations.map((op) =>
-        op.id === id ? { ...op, ...data } : op
+      operations: sortDesc(
+        state.operations.map((op) => (op.id === id ? { ...op, ...data } : op))
       ),
     }));
 
