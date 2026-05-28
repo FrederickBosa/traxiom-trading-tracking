@@ -178,9 +178,14 @@ function TradeFormModal({ open, onClose, trade, isDeposit }) {
 
   const isEdit = Boolean(trade);
 
-  const [draft,  setDraft]  = useState(() =>
-    trade ? { ...trade } : isDeposit ? emptyDeposit() : emptyTrade()
-  );
+  const [draft,  setDraft]  = useState(() => {
+    if (!trade) return isDeposit ? emptyDeposit() : emptyTrade();
+    // Al editar, formatear lotaje con 2 decimales para que 0.1 se vea 0.10
+    return {
+      ...trade,
+      risk: trade.risk != null ? Number(trade.risk).toFixed(2) : '',
+    };
+  });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
 

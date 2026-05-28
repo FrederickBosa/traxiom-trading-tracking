@@ -386,7 +386,7 @@ function MetricCard({ label, value, sub, valueColor, onClick }) {
       <div className="tt-stats-metrics__card-label">{label}</div>
       <div className="tt-stats-metrics__card-value" style={{ color: valueColor }}>{value}</div>
       {sub && <div className="tt-stats-metrics__card-sub">{sub}</div>}
-      <div className="tt-stats-metrics__card-tap">toca para saber más</div>
+      <div className="tt-stats-metrics__card-tap">saber más</div>
     </button>
   );
 }

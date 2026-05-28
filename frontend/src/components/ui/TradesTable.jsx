@@ -173,30 +173,54 @@ function TradesTable({ loading }) {
             },
           }}
         >
+          {/* Ghost — Importar MT5 */}
           <MenuItem
             onClick={() => { setImportOpen(true); closeMobileMenu(); }}
-            sx={{ fontSize: '0.825rem', py: 1.25, px: 2, gap: 1.5, color: '#374151' }}
+            sx={{
+              fontSize: '0.825rem',
+              fontWeight: 500,
+              py: 1.25, px: 2, gap: 1.5,
+              color: '#6b7280',
+              '&:hover': { background: '#f5f3ff', color: '#4b5563' },
+            }}
           >
-            <ListItemIcon sx={{ minWidth: 'auto', color: '#6b7280' }}>
+            <ListItemIcon sx={{ minWidth: 'auto', color: '#9ca3af' }}>
               <FileUploadRoundedIcon sx={{ fontSize: 18 }} />
             </ListItemIcon>
             Importar MT5
           </MenuItem>
           <Divider sx={{ my: 0.5, borderColor: '#ede9fe' }} />
+          {/* Secondary — Depósito */}
           <MenuItem
             onClick={() => { openDeposit(); closeMobileMenu(); }}
-            sx={{ fontSize: '0.825rem', py: 1.25, px: 2, gap: 1.5, color: '#374151' }}
+            sx={{
+              fontSize: '0.825rem',
+              fontWeight: 600,
+              py: 1.25, px: 2, gap: 1.5,
+              color: '#6d28d9',
+              '&:hover': { background: 'rgba(109,40,217,0.06)' },
+            }}
           >
             <ListItemIcon sx={{ minWidth: 'auto', color: '#7c3aed' }}>
               <AccountBalanceWalletRoundedIcon sx={{ fontSize: 18 }} />
             </ListItemIcon>
             Depósito
           </MenuItem>
+          {/* Primary — Nueva Operación */}
           <MenuItem
             onClick={() => { openNew(); closeMobileMenu(); }}
-            sx={{ fontSize: '0.825rem', fontWeight: 600, py: 1.25, px: 2, gap: 1.5, color: '#7c3aed' }}
+            sx={{
+              fontSize: '0.825rem',
+              fontWeight: 700,
+              py: 1, px: 2, gap: 1.5,
+              mx: 1, mb: 1, mt: 0.5,
+              borderRadius: '8px',
+              color: '#fff',
+              background: '#7c3aed',
+              '&:hover': { background: '#6d28d9' },
+            }}
           >
-            <ListItemIcon sx={{ minWidth: 'auto', color: '#7c3aed' }}>
+            <ListItemIcon sx={{ minWidth: 'auto', color: '#fff' }}>
               <AddRoundedIcon sx={{ fontSize: 18 }} />
             </ListItemIcon>
             Nueva Operación

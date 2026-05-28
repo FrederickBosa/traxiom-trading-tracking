@@ -47,7 +47,7 @@ function TradeRow({ trade, onEdit }) {
       <td className="tt-trade-row__cell">
         <span className="tt-trade-row__pair-badge">{trade.pair || '—'}</span>
       </td>
-      <td className="tt-trade-row__cell tt-trade-row__cell--mono">{trade.risk}</td>
+      <td className="tt-trade-row__cell tt-trade-row__cell--mono">{Number(trade.risk).toFixed(2)}</td>
       <td className="tt-trade-row__cell tt-trade-row__cell--mono">{trade.entryPoint}</td>
       <td className="tt-trade-row__cell tt-trade-row__cell--mono">{trade.takeProfit}</td>
       <td className="tt-trade-row__cell tt-trade-row__cell--mono">{trade.stopLoss}</td>
