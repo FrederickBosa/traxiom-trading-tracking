@@ -24,27 +24,29 @@ function mapOrderType(type) {
   return (type || '').toLowerCase() === 'sell' ? 'Sell Market' : 'Buy Market';
 }
 
-// Normaliza encabezados: minúsculas, sin caracteres especiales
-// "Deal #" → "deal", "Commission" → "commission"
-function normHeader(h) {
+// Normaliza encabezado: minúsculas, solo letras a-z
+// "S/L" → "sl"   "T/P" → "tp"   "Deal #" → "deal"   "Commission" → "commission"
+function normH(h) {
   return (h || '').toLowerCase().replace(/[^a-z]/g, '');
 }
 
-// Construye un mapa { columnaNormalizada: índiceVisible } a partir de la fila de cabecera
-function buildColMap(vis) {
-  const map = {};
-  vis.forEach((td, i) => {
-    const key = normHeader(td.textContent);
-    if (key) map[key] = i;
-  });
-  return map;
+// Construye mapa { headerNormalizado: índiceVisible } desde una fila visible
+function colMap(vis) {
+  const m = {};
+  vis.forEach((td, i) => { const k = normH(td.textContent); if (k) m[k] = i; });
+  return m;
 }
 
-// ─── 1. Sección Positions → mapa positionId → { tp, sl } ─────────────────────
+// ─── 1. Sección Positions ─────────────────────────────────────────────────────
+//  Retorna:
+//    positionMap  : { posId → { tp, sl } }          (para cruzar con Deals)
+//    openPositions: [ tradeObj, … ]                 (posiciones aún abiertas)
 function parsePositionsSection(doc) {
-  const map   = {};
-  const rows  = Array.from(doc.querySelectorAll('tr'));
-  let inSection = false, headerPassed = false;
+  const positionMap   = {};
+  const openPositions = [];
+  const rows = Array.from(doc.querySelectorAll('tr'));
+  let inSection = false;
+  let cols = null;
 
   for (const row of rows) {
     const text = row.textContent.replace(/\s+/g, ' ').trim();
@@ -53,29 +55,75 @@ function parsePositionsSection(doc) {
       if (text === 'Positions') inSection = true;
       continue;
     }
-    if (!headerPassed) {
-      if (text.includes('Symbol') && text.includes('Time')) headerPassed = true;
-      continue;
-    }
+    // La sección Positions termina cuando empieza Orders o Deals
     if (text === 'Orders' || text === 'Deals') break;
 
     const vis = Array.from(row.querySelectorAll('td'))
                      .filter(td => !td.classList.contains('hidden'));
-    if (vis.length < 10) continue;
 
-    const posId = vis[1]?.textContent.trim();
-    const sl    = parseFloat(vis[6]?.textContent.trim()) || 0;
-    const tp    = parseFloat(vis[7]?.textContent.trim()) || 0;
-    if (posId) map[posId] = { tp, sl };
+    // Detectar fila de cabecera
+    if (!cols) {
+      const hdrs = vis.map(td => normH(td.textContent));
+      if (hdrs.includes('time') && hdrs.some(h => h === 'symbol' || h === 'position' || h === 'sl' || h === 'tp')) {
+        cols = colMap(vis);
+      }
+      continue;
+    }
+
+    if (vis.length < 8) continue;
+
+    // Helper con fallback de índice
+    const g = (name, fb) =>
+      (cols[name] !== undefined ? vis[cols[name]] : vis[fb])?.textContent.trim() ?? '';
+
+    const posId  = g('position', 1);
+    const time   = g('time', 0);
+    const symbol = g('symbol', 2);
+    const type   = g('type', 3);
+    const volume = parseFloat(g('volume', 4)) || 0;
+    const price  = parseFloat(g('price', 5)) || 0;
+    // S/L y T/P: intentar varios nombres normalizados
+    const sl = parseFloat(g('sl', 6)) || parseFloat(g('stoploss', 6)) || 0;
+    const tp = parseFloat(g('tp', 7)) || parseFloat(g('takeprofit', 7)) || 0;
+
+    // Profit flotante: buscar en columnas posteriores al T/P
+    const profit = (() => {
+      for (let i = 8; i < vis.length; i++) {
+        const v = parseFloat(vis[i]?.textContent.trim());
+        if (!isNaN(v) && v !== 0) return v;
+      }
+      return 0;
+    })();
+
+    if (!posId || !symbol) continue;
+
+    positionMap[posId] = { tp, sl };
+
+    openPositions.push({
+      mt5Id:        posId,
+      pair:         cleanPair(symbol),
+      orderType:    mapOrderType(type),
+      entryPoint:   price,
+      takeProfit:   tp,
+      stopLoss:     sl,
+      result:       profit,
+      swap:         0,
+      risk:         volume,
+      openTime:     parseDateTime(time),
+      createdAt:    parseDate(time),
+      signalSource: 'MT5 Import',
+      observations: '',
+    });
   }
-  return map;
+
+  return { positionMap, openPositions };
 }
 
 // ─── 2. Sección Deals → trades cerrados + depósitos + balance final ───────────
 function parseDealsSection(doc, positionMap) {
   const rows = Array.from(doc.querySelectorAll('tr'));
   let inSection = false;
-  let cols = null;   // mapa de columna normalizada → índice visible
+  let cols = null;
 
   const posGroups  = {};
   const deposits   = [];
@@ -84,59 +132,50 @@ function parseDealsSection(doc, positionMap) {
   for (const row of rows) {
     const text = row.textContent.replace(/\s+/g, ' ').trim();
 
-    // ── Detectar inicio de sección ────────────────────────────────────
     if (!inSection) {
       if (text === 'Deals') inSection = true;
       continue;
     }
 
-    // Solo celdas visibles (sin clase "hidden")
     const vis = Array.from(row.querySelectorAll('td'))
                      .filter(td => !td.classList.contains('hidden'));
 
-    // ── Detectar fila de cabecera → construir mapa de columnas ────────
+    // Construir mapa de columnas desde la cabecera
     if (!cols) {
-      const headers = vis.map(td => normHeader(td.textContent));
-      // La cabecera de Deals siempre tiene 'time' y alguno de: 'type', 'direction', 'deal'
-      if (headers.includes('time') &&
-          (headers.includes('type') || headers.includes('direction') || headers.includes('deal'))) {
-        cols = buildColMap(vis);
+      const hdrs = vis.map(td => normH(td.textContent));
+      if (hdrs.includes('time') &&
+          (hdrs.includes('type') || hdrs.includes('direction') || hdrs.includes('deal'))) {
+        cols = colMap(vis);
       }
       continue;
     }
 
-    // Ignorar filas muy cortas (separadores, totales…)
     if (vis.length < 5) continue;
 
-    // Helper: obtiene el texto del campo, priorizando mapa de columnas
-    const g = (name, fallbackIdx) => {
-      const idx = cols[name];
-      return (idx !== undefined ? vis[idx] : vis[fallbackIdx])?.textContent.trim() ?? '';
-    };
+    const g = (name, fb) =>
+      (cols[name] !== undefined ? vis[cols[name]] : vis[fb])?.textContent.trim() ?? '';
 
-    // ── Extraer campos ─────────────────────────────────────────────────
-    const time      = g('time', 0);
-    const symbol    = g('symbol', 2);
-    const type      = g('type', 3).toLowerCase();
-    const volume    = parseFloat(g('volume', 5)) || 0;
-    const price     = parseFloat(g('price', 6)) || 0;
-    const orderId   = g('order', 7);
-    const commission= parseFloat(g('commission', 8)) || 0;
-    const fee       = parseFloat(g('fee', 9)) || 0;
-    const swap      = parseFloat(g('swap', 10)) || 0;
-    const profit    = parseFloat(g('profit', 11)) || 0;
-    const balance   = parseFloat(g('balance', 12)) || 0;
-    const comment   = g('comment', 13);
+    const time       = g('time', 0);
+    const symbol     = g('symbol', 2);
+    const type       = g('type', 3).toLowerCase();
+    const volume     = parseFloat(g('volume', 5)) || 0;
+    const price      = parseFloat(g('price', 6)) || 0;
+    const orderId    = g('order', 7);
+    const commission = parseFloat(g('commission', 8)) || 0;
+    const fee        = parseFloat(g('fee', 9)) || 0;
+    const swap       = parseFloat(g('swap', 10)) || 0;
+    const profit     = parseFloat(g('profit', 11)) || 0;
+    const balance    = parseFloat(g('balance', 12)) || 0;
+    const comment    = g('comment', 13);
 
-    // Dirección: se lee del mapa si existe; si no, se infiere por orden de aparición
-    const dirRaw = cols['direction'] !== undefined ? g('direction', -1).toLowerCase() : '';
-    // 'in' → apertura, 'out' → cierre.  Si no hay columna direction se usa la heurística.
-    const isExplicitIn  = dirRaw === 'in';
-    const isExplicitOut = dirRaw === 'out';
+    // Dirección explícita si la columna existe y tiene valor 'in'/'out'
+    const dirRaw     = cols['direction'] !== undefined ? g('direction', -1).toLowerCase() : '';
+    const explicitIn  = dirRaw === 'in';
+    const explicitOut = dirRaw === 'out';
 
     if (balance > 0) finalBalance = balance;
 
-    // ── Depósitos y créditos ──────────────────────────────────────────
+    // ── Depósitos / créditos ─────────────────────────────────────────
     if (type === 'balance' || type === 'credit') {
       deposits.push({
         pair:         'Depósito',
@@ -155,69 +194,77 @@ function parseDealsSection(doc, positionMap) {
       continue;
     }
 
-    // ── Deals de trades ───────────────────────────────────────────────
+    // ── Deals de trades ──────────────────────────────────────────────
     if (!symbol || !orderId) continue;
     if (!posGroups[orderId]) posGroups[orderId] = {};
 
-    const group = posGroups[orderId];
+    const grp = posGroups[orderId];
 
-    // Determinar si es apertura o cierre:
-    //   1. Usa Direction si está disponible y tiene valor explícito ('in'/'out')
-    //   2. Heurística: primera aparición del posId = apertura, segunda = cierre
+    // Determinar apertura/cierre:
+    //  1. Columna Direction explícita con valor 'in'/'out'
+    //  2. Heurística: primera aparición = apertura, segunda = cierre
     let isIn, isOut;
-    if (isExplicitIn || isExplicitOut) {
-      isIn  = isExplicitIn;
-      isOut = isExplicitOut;
+    if (explicitIn || explicitOut) {
+      isIn  = explicitIn;
+      isOut = explicitOut;
     } else {
-      // Sin columna Direction: inferir por orden cronológico
-      isIn  = !group.in;
-      isOut = !!group.in && !group.out;
+      isIn  = !grp.in;
+      isOut = !!grp.in && !grp.out;
     }
 
-    if (isIn && !group.in) {
-      group.in = { time, symbol, type, volume, price, commission, fee, swap };
-    } else if (isOut && !group.out) {
-      group.out = { time, price, profit, commission, fee, swap };
+    if (isIn && !grp.in) {
+      grp.in = { time, symbol, type, volume, price, commission, fee, swap };
+    } else if (isOut && !grp.out) {
+      grp.out = { time, price, profit, commission, fee, swap };
     }
   }
 
-  // ── Construir trades combinando in + out + TP/SL de Positions ─────────
-  const trades = [];
-  for (const [posId, group] of Object.entries(posGroups)) {
-    if (!group.in || !group.out) continue;   // solo trades cerrados
+  // ── Construir trades cerrados ──────────────────────────────────────
+  const closedTrades = [];
+  for (const [posId, grp] of Object.entries(posGroups)) {
+    if (!grp.in || !grp.out) continue;   // ignorar posiciones aún abiertas en Deals
 
-    const inDeal  = group.in;
-    const outDeal = group.out;
-    const pos     = positionMap[posId] || {};
+    const inD  = grp.in;
+    const outD = grp.out;
+    const pos  = positionMap[posId] || {};
 
-    const totalSwap = (inDeal.swap || 0) + (outDeal.swap || 0);
-
-    trades.push({
+    closedTrades.push({
       mt5Id:        posId,
-      pair:         cleanPair(inDeal.symbol),
-      orderType:    mapOrderType(inDeal.type),
-      entryPoint:   inDeal.price,
+      pair:         cleanPair(inD.symbol),
+      orderType:    mapOrderType(inD.type),
+      entryPoint:   inD.price,
       takeProfit:   pos.tp || 0,
       stopLoss:     pos.sl || 0,
-      result:       outDeal.profit,
-      swap:         totalSwap,
-      risk:         inDeal.volume,
-      openTime:     parseDateTime(inDeal.time),
-      createdAt:    parseDate(inDeal.time),
+      result:       outD.profit,
+      swap:         (inD.swap || 0) + (outD.swap || 0),
+      risk:         inD.volume,
+      openTime:     parseDateTime(inD.time),
+      createdAt:    parseDate(inD.time),
       signalSource: 'MT5 Import',
       observations: '',
     });
   }
 
-  // Ordenar por openTime para que el bulk insert vaya en orden cronológico
-  trades.sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
-
-  return { trades, deposits, finalBalance };
+  return { closedTrades, deposits, finalBalance };
 }
 
 // ─── Función principal ────────────────────────────────────────────────────────
 export function parseMT5Html(htmlText) {
-  const doc         = new DOMParser().parseFromString(htmlText, 'text/html');
-  const positionMap = parsePositionsSection(doc);
-  return parseDealsSection(doc, positionMap);
+  const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+
+  // 1. Positions: positionMap (TP/SL) + posiciones abiertas como trades
+  const { positionMap, openPositions } = parsePositionsSection(doc);
+
+  // 2. Deals: trades cerrados + depósitos + balance
+  const { closedTrades, deposits, finalBalance } = parseDealsSection(doc, positionMap);
+
+  // 3. Unir: los trades cerrados tienen precedencia sobre las posiciones abiertas
+  //    (si una posición aparece como cerrada en Deals, no la duplicamos desde Positions)
+  const closedIds = new Set(closedTrades.map(t => t.mt5Id).filter(Boolean));
+  const openOnly  = openPositions.filter(t => !closedIds.has(t.mt5Id));
+
+  const trades = [...closedTrades, ...openOnly];
+  trades.sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+
+  return { trades, deposits, finalBalance };
 }
