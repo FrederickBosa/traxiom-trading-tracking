@@ -1,5 +1,7 @@
 // Sin useMemo manual: el React Compiler (React 19) los gestiona automáticamente.
-// Tenerlos causaba "Compilation Skipped" porque detectaba mutación en setHours.
+import { useState } from 'react';
+import ChevronLeftRoundedIcon  from '@mui/icons-material/ChevronLeftRounded';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
 
 const DAY_LABELS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
@@ -21,27 +23,54 @@ function getDayNumColor(data, isFuture) {
 }
 
 function ActivityHeatmap({ operations }) {
-  // Fecha local de hoy a medianoche — sin mutar el objeto (new Date(y,m,d))
-  const now   = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // Fecha local de hoy
+  const now     = new Date();
+  const todayY  = now.getFullYear();
+  const todayM  = now.getMonth();    // 0-indexed
+  const todayD  = now.getDate();
+  const todayObj = new Date(todayY, todayM, todayD);
 
-  const year  = today.getFullYear();
-  const month = today.getMonth();
+  // Mes más antiguo con operaciones (para limitar navegación hacia atrás)
+  const earliestKey = operations.reduce((min, op) => {
+    const k = (op.createdAt || '').slice(0, 7);
+    return (!min || k < min) ? k : min;
+  }, '');
+  const [earliestY, earliestMStr] = earliestKey ? earliestKey.split('-') : [String(todayY), String(todayM + 1)];
+  const earliestYear  = parseInt(earliestY, 10) || todayY;
+  const earliestMonth = (parseInt(earliestMStr, 10) || (todayM + 1)) - 1; // 0-indexed
+
+  // Estado: mes visible
+  const [viewYear,  setViewYear]  = useState(todayY);
+  const [viewMonth, setViewMonth] = useState(todayM); // 0-indexed
+
+  const canGoBack = viewYear > earliestYear || (viewYear === earliestYear && viewMonth > earliestMonth);
+  const canGoFwd  = viewYear < todayY || (viewYear === todayY && viewMonth < todayM);
+
+  function prevMonth() {
+    if (!canGoBack) return;
+    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11); }
+    else setViewMonth(m => m - 1);
+  }
+  function nextMonth() {
+    if (!canGoFwd) return;
+    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0); }
+    else setViewMonth(m => m + 1);
+  }
+
+  const year  = viewYear;
+  const month = viewMonth;
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const rawDow   = new Date(year, month, 1).getDay();
+  const firstDow = rawDow === 0 ? 6 : rawDow - 1; // lunes = 0
 
-  // Monday-first offset: Mon=0 … Sun=6
-  const rawDow  = new Date(year, month, 1).getDay();
-  const firstDow = rawDow === 0 ? 6 : rawDow - 1;
-
-  // Grilla de celdas: null = relleno, número = día del mes
   const head     = Array(firstDow).fill(null);
   const days     = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const combined = [...head, ...days];
   const rem      = combined.length % 7;
   const cells    = rem === 0 ? combined : [...combined, ...Array(7 - rem).fill(null)];
 
-  // Índice fecha→{count, netResult} (sin mutación de objeto)
+  // Índice fecha → { count, netResult }
   const tradesByDate = operations.reduce((acc, op) => {
     const dateKey = (op.createdAt || '').slice(0, 10);
     if (!dateKey) return acc;
@@ -50,36 +79,74 @@ function ActivityHeatmap({ operations }) {
       ...acc,
       [dateKey]: {
         count:     prev.count + 1,
-        netResult: prev.netResult + (op.result || 0),
+        netResult: prev.netResult + (op.result || 0) + (op.swap || 0),
       },
     };
   }, {});
 
-  const monthTitle = today.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+  // Resumen del mes visible
+  const mm = String(month + 1).padStart(2, '0');
+  const monthPrefix = `${year}-${mm}`;
+  const monthEntries = Object.entries(tradesByDate).filter(([k]) => k.startsWith(monthPrefix));
+  const monthTrades = monthEntries.reduce((s, [, v]) => s + v.count, 0);
+  const monthPnl    = monthEntries.reduce((s, [, v]) => s + v.netResult, 0);
+
+  const monthTitle = new Date(year, month, 1)
+    .toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+
+  const pnlColor = monthPnl > 0 ? '#059669' : monthPnl < 0 ? '#dc2626' : '#9ca3af';
+  const pnlSign  = monthPnl > 0 ? '+' : '';
 
   return (
     <div className="tt-activity-heatmap">
-      <p className="tt-activity-heatmap__month-title">{monthTitle}</p>
+      {/* Cabecera con navegación */}
+      <div className="tt-activity-heatmap__nav">
+        <button
+          className="tt-activity-heatmap__nav-btn"
+          onClick={prevMonth}
+          disabled={!canGoBack}
+          aria-label="Mes anterior"
+        >
+          <ChevronLeftRoundedIcon sx={{ fontSize: 16 }} />
+        </button>
 
-      {/* Day-of-week headers */}
+        <div className="tt-activity-heatmap__nav-center">
+          <p className="tt-activity-heatmap__month-title">{monthTitle}</p>
+          {monthTrades > 0 && (
+            <span className="tt-activity-heatmap__month-summary" style={{ color: pnlColor }}>
+              {monthTrades} op{monthTrades !== 1 ? 's' : ''} · {pnlSign}${monthPnl.toFixed(2)}
+            </span>
+          )}
+        </div>
+
+        <button
+          className="tt-activity-heatmap__nav-btn"
+          onClick={nextMonth}
+          disabled={!canGoFwd}
+          aria-label="Mes siguiente"
+        >
+          <ChevronRightRoundedIcon sx={{ fontSize: 16 }} />
+        </button>
+      </div>
+
+      {/* Etiquetas días de la semana */}
       <div className="tt-activity-heatmap__dow-row">
         {DAY_LABELS.map((d) => (
           <span key={d} className="tt-activity-heatmap__dow-label">{d}</span>
         ))}
       </div>
 
-      {/* Calendar grid */}
+      {/* Grilla */}
       <div className="tt-activity-heatmap__cal-grid">
         {cells.map((day, idx) => {
           if (!day) {
             return <div key={`pad-${idx}`} className="tt-activity-heatmap__cal-empty" />;
           }
-          const mm      = String(month + 1).padStart(2, '0');
           const dd      = String(day).padStart(2, '0');
           const dateStr = `${year}-${mm}-${dd}`;
           const cellDate = new Date(year, month, day);
-          const isFuture = cellDate > today;
-          const isToday  = cellDate.getTime() === today.getTime();
+          const isFuture = cellDate > todayObj;
+          const isToday  = cellDate.getTime() === todayObj.getTime();
           const data     = tradesByDate[dateStr] ?? null;
           const bg       = getCellColor(data, isFuture);
           const numColor = getDayNumColor(data, isFuture);
@@ -108,7 +175,7 @@ function ActivityHeatmap({ operations }) {
         })}
       </div>
 
-      {/* Legend */}
+      {/* Leyenda */}
       <div className="tt-activity-heatmap__cal-legend">
         <span style={{ backgroundColor: 'rgba(5,150,105,0.55)' }} />
         <span className="tt-activity-heatmap__cal-legend-label">Ganancia</span>

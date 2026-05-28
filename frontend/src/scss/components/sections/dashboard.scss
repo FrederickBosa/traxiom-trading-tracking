@@ -144,6 +144,13 @@ $sectionSpecificName: "dashboard";
     letter-spacing: -0.01em;
   }
 
+  // ─── METRICS ROW (KPI grid wrapper) ─────────────────────────────────────
+
+  &__metrics-row {
+    width: 100%;
+    // El grid interno lo gestiona .tt-stats-metrics directamente
+  }
+
   // ─── TABLE WRAPPER ────────────────────────────────────────────────────────
 
   &__table-wrapper { width: 100%; }

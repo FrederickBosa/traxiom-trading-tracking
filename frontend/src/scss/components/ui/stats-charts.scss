@@ -107,7 +107,7 @@
   }
 }
 
-// ─── STATS RADAR ─────────────────────────────────────────────────────────────
+// ─── STATS RADAR (legacy, kept for reference) ────────────────────────────────
 
 .tt-stats-radar {
   width: 100%;
@@ -120,5 +120,93 @@
     font-size: 0.75rem;
     color: variables.$text-muted;
     font-style: italic;
+  }
+}
+
+// ─── MONTHLY P&L BAR ─────────────────────────────────────────────────────────
+
+.tt-monthly-pnl {
+  width: 100%;
+
+  &--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 150px;
+    font-size: 0.75rem;
+    color: variables.$text-muted;
+    font-style: italic;
+  }
+}
+
+// ─── STATS METRICS (myfxbook-style KPI grid) ─────────────────────────────────
+
+.tt-stats-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+
+  @media (min-width: 640px)  { grid-template-columns: repeat(4, 1fr); }
+  @media (min-width: 1024px) { grid-template-columns: repeat(8, 1fr); }
+
+  &--empty {
+    grid-column: 1 / -1;
+    padding: 16px 20px;
+    font-size: 0.75rem;
+    color: variables.$text-muted;
+    font-style: italic;
+    background: variables.$bg-card;
+    border: 1px solid variables.$border-subtle;
+    border-radius: 14px;
+    text-align: center;
+  }
+
+  &__card {
+    background: variables.$bg-card;
+    border: 1px solid variables.$border-subtle;
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-shadow: variables.$shadow-card;
+    transition: box-shadow 0.15s;
+
+    &:hover { box-shadow: 0 4px 20px rgba(109,77,209,0.12); }
+  }
+
+  &__card-label {
+    display: flex;
+    align-items: center;
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: variables.$text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    line-height: 1.2;
+    min-height: 14px;
+  }
+
+  &__card-value {
+    font-size: 1rem;
+    font-weight: 800;
+    font-family: variables.$font-mono;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: variables.$text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__card-sub {
+    font-size: 0.6rem;
+    color: variables.$text-muted;
+    font-family: variables.$font-mono;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
   }
 }

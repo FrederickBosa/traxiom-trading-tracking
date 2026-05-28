@@ -93,21 +93,100 @@ const useTradingStore = create((set, get) => ({
 
   getCurrentBalance: () => {
     const { operations } = get();
-    return operations.reduce((acc, op) => acc + (op.result || 0), 0);
+    // El balance real incluye resultado + swap de cada operación
+    return operations.reduce((acc, op) => acc + (op.result || 0) + (op.swap || 0), 0);
   },
 
   getEquityCurve: () => {
     const { operations } = get();
-    const deposits = operations.filter((op) => op.orderType === 'Depósito');
+    const deposits     = operations.filter((op) => op.orderType === 'Depósito');
     const depositTotal = deposits.reduce((acc, op) => acc + (op.result || 0), 0);
+    // Orden cronológico (el store guarda DESC) + swap incluido
+    const trades = [...operations.filter((op) => op.orderType !== 'Depósito')].reverse();
     let running = depositTotal;
     const curve = [{ trade: 0, balance: depositTotal }];
-    const trades = operations.filter((op) => op.orderType !== 'Depósito');
     trades.forEach((op, i) => {
-      running += op.result || 0;
+      running += (op.result || 0) + (op.swap || 0);
       curve.push({ trade: i + 1, balance: parseFloat(running.toFixed(2)) });
     });
     return curve;
+  },
+
+  // ─── Estadísticas completas (estilo myfxbook) ─────────────────────────────
+  getStats: () => {
+    const { operations } = get();
+    const deposits = operations.filter((op) => op.orderType === 'Depósito');
+    // Cronológico para drawdown y racha
+    const trades   = [...operations.filter((op) => op.orderType !== 'Depósito')].reverse();
+    if (!trades.length) return null;
+
+    const depositTotal = deposits.reduce((s, op) => s + (op.result || 0), 0);
+    const netResults   = trades.map((op) => (op.result || 0) + (op.swap || 0));
+
+    const winners = netResults.filter((r) => r > 0);
+    const losers  = netResults.filter((r) => r < 0);
+
+    const grossProfit  = winners.reduce((s, r) => s + r, 0);
+    const grossLoss    = losers.reduce((s, r) => s + r, 0);
+    const netProfit    = grossProfit + grossLoss;
+    const winRate      = (winners.length / trades.length) * 100;
+    const profitFactor = grossLoss !== 0 ? grossProfit / Math.abs(grossLoss) : null;
+    const expectedPayoff = netProfit / trades.length;
+    const avgWin   = winners.length ? grossProfit / winners.length : 0;
+    const avgLoss  = losers.length  ? grossLoss   / losers.length  : 0;
+    const bestTrade  = winners.length ? Math.max(...winners) : 0;
+    const worstTrade = losers.length  ? Math.min(...losers)  : 0;
+
+    // Drawdown: mayor caída desde un máximo de balance
+    let running = depositTotal, peak = depositTotal, maxDD = 0, maxDDPct = 0;
+    for (const r of netResults) {
+      running += r;
+      if (running > peak) peak = running;
+      const dd = peak - running;
+      if (dd > maxDD) { maxDD = dd; maxDDPct = peak > 0 ? (dd / peak) * 100 : 0; }
+    }
+
+    // Long / Short breakdown
+    const isLong  = (op) => (op.orderType || '').toLowerCase().includes('buy');
+    const isShort = (op) => (op.orderType || '').toLowerCase().includes('sell');
+    const longsRes  = [];
+    const shortsRes = [];
+    trades.forEach((op, i) => {
+      if (isLong(op))  longsRes.push(netResults[i]);
+      if (isShort(op)) shortsRes.push(netResults[i]);
+    });
+
+    // Racha máxima consecutiva
+    let maxConsecW = 0, maxConsecL = 0, curW = 0, curL = 0;
+    for (const r of netResults) {
+      if (r > 0)      { curW++; curL = 0; if (curW > maxConsecW) maxConsecW = curW; }
+      else if (r < 0) { curL++; curW = 0; if (curL > maxConsecL) maxConsecL = curL; }
+      else            { curW = 0; curL = 0; }
+    }
+
+    return {
+      totalTrades:    trades.length,
+      winners:        winners.length,
+      losers:         losers.length,
+      netProfit,
+      grossProfit,
+      grossLoss,
+      winRate,
+      profitFactor,
+      expectedPayoff,
+      avgWin,
+      avgLoss,
+      bestTrade,
+      worstTrade,
+      maxDD,
+      maxDDPct,
+      longs:          longsRes.length,
+      shorts:         shortsRes.length,
+      longWinRate:    longsRes.length  ? (longsRes.filter((r) => r > 0).length  / longsRes.length)  * 100 : 0,
+      shortWinRate:   shortsRes.length ? (shortsRes.filter((r) => r > 0).length / shortsRes.length) * 100 : 0,
+      maxConsecWins:   maxConsecW,
+      maxConsecLosses: maxConsecL,
+    };
   },
 }));
 
