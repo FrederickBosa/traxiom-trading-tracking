@@ -83,14 +83,21 @@ function parsePositionsSection(doc) {
     const volume = parseFloat(g('volume', 4)) || 0;
     const price  = parseFloat(g('price', 5)) || 0;
     // S/L y T/P: intentar varios nombres normalizados
-    const sl = parseFloat(g('sl', 6)) || parseFloat(g('stoploss', 6)) || 0;
-    const tp = parseFloat(g('tp', 7)) || parseFloat(g('takeprofit', 7)) || 0;
+    const sl   = parseFloat(g('sl', 6)) || parseFloat(g('stoploss', 6)) || 0;
+    const tp   = parseFloat(g('tp', 7)) || parseFloat(g('takeprofit', 7)) || 0;
+    const swap = parseFloat(g('swap', -1)) || 0;
 
-    // Profit flotante: buscar en columnas posteriores al T/P
+    // Profit flotante: usar columna del mapa si existe; si no, escanear desde índice 8
+    // saltando celdas que parecen fechas ("2026.04.08…" → parseFloat = 2026.04)
     const profit = (() => {
+      for (const name of ['profit', 'pl', 'pnl']) {
+        if (cols[name] !== undefined) return parseFloat(g(name, -1)) || 0;
+      }
       for (let i = 8; i < vis.length; i++) {
-        const v = parseFloat(vis[i]?.textContent.trim());
-        if (!isNaN(v) && v !== 0) return v;
+        const txt = vis[i]?.textContent.trim() || '';
+        if (/^\d{4}[.\-]/.test(txt)) continue;   // saltar fechas tipo "2026.04.08"
+        const v = parseFloat(txt);
+        if (!isNaN(v)) return v;
       }
       return 0;
     })();
@@ -107,7 +114,7 @@ function parsePositionsSection(doc) {
       takeProfit:   tp,
       stopLoss:     sl,
       result:       profit,
-      swap:         0,
+      swap:         swap,
       risk:         volume,
       openTime:     parseDateTime(time),
       createdAt:    parseDate(time),
