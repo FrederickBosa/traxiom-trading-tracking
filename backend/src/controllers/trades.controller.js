@@ -22,6 +22,8 @@ const toSnake = (trade, clientDate) => ({
   order_type: trade.orderType,
   signal_source: trade.signalSource,
   result: trade.result,
+  swap: trade.swap ?? 0,
+  open_time: trade.openTime || null,   // ISO datetime de MT5; null para trades manuales
   observations: trade.observations,
   // Prioridad: (1) lo que el cliente envía en el body,
   //            (2) header X-Client-Date,
@@ -43,6 +45,8 @@ const toCamel = (row) => ({
   orderType: row.order_type,
   signalSource: row.signal_source,
   result: Number(row.result),
+  swap: Number(row.swap ?? 0),
+  openTime: row.open_time || null,     // ISO datetime o null
   observations: row.observations || '',
   createdAt: toDateString(row.created_at),
   isEditing: false,
@@ -54,8 +58,9 @@ export async function getAllTrades(req, res, next) {
       .from('trades')
       .select('*')
       .eq('user_id', req.user.id)
-      .order('created_at', { ascending: false })
-      .order('id',         { ascending: false }); // desempate: la más reciente primero
+      .order('open_time',  { ascending: false, nullsFirst: false }) // primero trades MT5 con hora exacta
+      .order('created_at', { ascending: false })                    // luego por fecha
+      .order('id',         { ascending: false });                   // desempate final
 
     if (error) throw error;
     res.json(data.map(toCamel));

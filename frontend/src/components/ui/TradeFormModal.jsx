@@ -32,7 +32,7 @@ const parseDecimal = (v) => {
   return isNaN(n) ? '' : n;
 };
 
-const emptyTrade   = () => ({ pair: '', risk: '', entryPoint: '', takeProfit: '', stopLoss: '', orderType: 'Buy Market', signalSource: 'M71', result: '', observations: '', createdAt: today() });
+const emptyTrade   = () => ({ pair: '', risk: '', entryPoint: '', takeProfit: '', stopLoss: '', orderType: 'Buy Market', signalSource: 'M71', result: '', swap: 0, observations: '', createdAt: today() });
 const emptyDeposit = () => ({ pair: 'Depósito', risk: 0, entryPoint: 0, takeProfit: 0, stopLoss: 0, orderType: 'Depósito', signalSource: 'M71', result: '', observations: '', createdAt: today() });
 
 // ─── Esquemas Yup ─────────────────────────────────────────────────────────────
@@ -198,6 +198,7 @@ function TradeFormModal({ open, onClose, trade, isDeposit }) {
       takeProfit: parseDecimal(draft.takeProfit),
       stopLoss:   parseDecimal(draft.stopLoss),
       result:     parseDecimal(draft.result),
+      swap:       parseDecimal(draft.swap ?? 0),
     };
 
     try {
@@ -333,7 +334,7 @@ function TradeFormModal({ open, onClose, trade, isDeposit }) {
               )}
             />
 
-            <DecimalField label="Riesgo"        value={draft.risk}       onChange={(v) => set('risk', v)}       error={!!e.risk}       helperText={e.risk} />
+            <DecimalField label="Lotaje"         value={draft.risk}       onChange={(v) => set('risk', v)}       error={!!e.risk}       helperText={e.risk} />
             <DecimalField label="Precio"         value={draft.entryPoint} onChange={(v) => set('entryPoint', v)} error={!!e.entryPoint} helperText={e.entryPoint} />
             <DecimalField label="Take Profit"    value={draft.takeProfit} onChange={(v) => set('takeProfit', v)} error={!!e.takeProfit} helperText={e.takeProfit} />
             <DecimalField label="Stop Loss"      value={draft.stopLoss}   onChange={(v) => set('stopLoss', v)}   error={!!e.stopLoss}   helperText={e.stopLoss} />
@@ -348,6 +349,7 @@ function TradeFormModal({ open, onClose, trade, isDeposit }) {
             />
 
             <DecimalField label="Resultado ($)"  value={draft.result}     onChange={(v) => set('result', v)}     error={!!e.result}     helperText={e.result} />
+            <DecimalField label="Swap ($)"        value={draft.swap ?? 0}  onChange={(v) => set('swap', v)} />
 
             {/* Observaciones */}
             <div style={{ gridColumn: '1 / -1' }}>

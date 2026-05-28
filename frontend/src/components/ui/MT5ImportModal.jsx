@@ -12,11 +12,11 @@ import useTradingStore from '../../store/useTradingStore';
 
 // Detecta duplicados contra las ops ya existentes en el store
 // Criterio: mismo par + misma fecha + mismo resultado
-function markDuplicates(parsed, existing) {
+function markDuplicates(items, existing) {
   const keys = new Set(
     existing.map((op) => `${op.pair}|${op.createdAt}|${op.result}`)
   );
-  return parsed.map((t) => ({
+  return items.map((t) => ({
     ...t,
     isDuplicate: keys.has(`${t.pair}|${t.createdAt}|${t.result}`),
   }));
@@ -24,18 +24,37 @@ function markDuplicates(parsed, existing) {
 
 const cellSx = { fontSize: '0.72rem', padding: '5px 8px', whiteSpace: 'nowrap' };
 
+const badge = (bg, color, text) => (
+  <span style={{ fontSize: '0.78rem', background: bg, color, padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
+    {text}
+  </span>
+);
+
 export default function MT5ImportModal({ open, onClose }) {
-  const operations      = useTradingStore((s) => s.operations);
+  const operations       = useTradingStore((s) => s.operations);
   const importOperations = useTradingStore((s) => s.importOperations);
 
   const fileInputRef = useRef(null);
-  const [trades,   setTrades]   = useState([]);   // parsed + marked
+
+  // parsed: null antes de cargar, { trades, deposits, finalBalance } tras parsear
+  const [parsed,   setParsed]   = useState(null);
   const [fileName, setFileName] = useState('');
   const [loading,  setLoading]  = useState(false);
   const [saving,   setSaving]   = useState(false);
   const [error,    setError]    = useState('');
 
-  const newTrades = trades.filter((t) => !t.isDuplicate);
+  // Combinar trades + depósitos → marcar duplicados
+  const allItems  = parsed
+    ? markDuplicates([...parsed.trades, ...parsed.deposits], operations)
+    : [];
+  const newItems  = allItems.filter((t) => !t.isDuplicate);
+  const dupCount  = allItems.length - newItems.length;
+
+  // Contadores para el resumen
+  const totalTrades   = parsed?.trades.length   ?? 0;
+  const totalDeposits = parsed?.deposits.length ?? 0;
+  const newTrades     = newItems.filter((t) => t.orderType !== 'Depósito').length;
+  const newDeposits   = newItems.filter((t) => t.orderType === 'Depósito').length;
 
   // ── Leer y parsear el HTML ─────────────────────────────────────────────────
   function handleFile(file) {
@@ -43,16 +62,16 @@ export default function MT5ImportModal({ open, onClose }) {
     setFileName(file.name);
     setError('');
     setLoading(true);
+    setParsed(null);
 
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const parsed  = parseMT5Html(e.target.result);
-        if (!parsed.length) {
+        const result = parseMT5Html(e.target.result);
+        if (!result.trades.length && !result.deposits.length) {
           setError('No se encontraron operaciones en el archivo. ¿Es un reporte de MT5?');
-          setTrades([]);
         } else {
-          setTrades(markDuplicates(parsed, operations));
+          setParsed(result);
         }
       } catch {
         setError('Error al leer el archivo. Verifica que sea un reporte HTML de MT5.');
@@ -73,11 +92,11 @@ export default function MT5ImportModal({ open, onClose }) {
   }
 
   async function handleImport() {
-    if (!newTrades.length) return;
+    if (!newItems.length) return;
     setSaving(true);
     try {
       // eslint-disable-next-line no-unused-vars
-      const toSend = newTrades.map(({ mt5Id, isDuplicate, ...rest }) => rest);
+      const toSend = newItems.map(({ mt5Id, isDuplicate, ...rest }) => rest);
       await importOperations(toSend);
       onClose();
     } catch {
@@ -89,13 +108,14 @@ export default function MT5ImportModal({ open, onClose }) {
 
   function handleClose() {
     if (saving) return;
-    setTrades([]);
+    setParsed(null);
     setFileName('');
     setError('');
     onClose();
   }
 
   const resultColor = (v) => (v > 0 ? '#059669' : v < 0 ? '#dc2626' : '#6b7280');
+  const fmtResult   = (v) => (v >= 0 ? `+$${v.toFixed(2)}` : `-$${Math.abs(v).toFixed(2)}`);
 
   return (
     <Dialog
@@ -156,29 +176,46 @@ export default function MT5ImportModal({ open, onClose }) {
         )}
 
         {/* ── Resumen + tabla preview ── */}
-        {!loading && trades.length > 0 && (
+        {!loading && parsed && allItems.length > 0 && (
           <>
             {/* Resumen */}
-            <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.78rem', background: '#ede9fe', color: '#6d28d9', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
-                {trades.length} encontradas
-              </span>
-              <span style={{ fontSize: '0.78rem', background: '#d1fae5', color: '#059669', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
-                {newTrades.length} nuevas
-              </span>
-              {trades.length - newTrades.length > 0 && (
-                <span style={{ fontSize: '0.78rem', background: '#f3f4f6', color: '#6b7280', padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>
-                  {trades.length - newTrades.length} duplicadas (se omiten)
+            <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+              {badge('#ede9fe', '#6d28d9', `${totalTrades} operaciones`)}
+              {totalDeposits > 0 && badge('#fef9c3', '#92400e', `${totalDeposits} depósitos`)}
+              {badge('#d1fae5', '#059669', `${newItems.length} nuevas`)}
+              {dupCount > 0 && badge('#f3f4f6', '#6b7280', `${dupCount} duplicadas`)}
+
+              {/* Balance final MT5 */}
+              {parsed.finalBalance > 0 && (
+                <span style={{
+                  marginLeft: 'auto',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  color: '#1e1b4b',
+                  background: '#f0fdf4',
+                  border: '1px solid #bbf7d0',
+                  padding: '3px 12px',
+                  borderRadius: 20,
+                }}>
+                  Balance MT5: ${parsed.finalBalance.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               )}
             </div>
 
+            {/* Desglose nuevas */}
+            {newItems.length > 0 && (newTrades > 0 || newDeposits > 0) && (
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12, fontSize: '0.72rem', color: '#6b7280' }}>
+                {newTrades > 0   && <span>• {newTrades} trade{newTrades !== 1 ? 's' : ''} nuevo{newTrades !== 1 ? 's' : ''}</span>}
+                {newDeposits > 0 && <span>• {newDeposits} depósito{newDeposits !== 1 ? 's' : ''} nuevo{newDeposits !== 1 ? 's' : ''}</span>}
+              </div>
+            )}
+
             {/* Tabla preview */}
             <div style={{ overflowX: 'auto', maxHeight: 320, overflowY: 'auto', borderRadius: 8, border: '1px solid #ede9fe' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 680 }}>
                 <thead>
-                  <tr style={{ background: '#f5f3ff', position: 'sticky', top: 0 }}>
-                    {['Fecha', 'Par', 'Tipo', 'Precio', 'SL', 'TP', 'Resultado', ''].map((h) => (
+                  <tr style={{ background: '#f5f3ff', position: 'sticky', top: 0, zIndex: 1 }}>
+                    {['Fecha', 'Par', 'Tipo', 'Lotaje', 'Precio', 'SL', 'TP', 'Swap', 'Resultado', ''].map((h) => (
                       <th key={h} style={{ ...cellSx, fontWeight: 700, color: '#7c3aed', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         {h}
                       </th>
@@ -186,28 +223,39 @@ export default function MT5ImportModal({ open, onClose }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {trades.map((t, i) => (
-                    <tr
-                      key={`${t.mt5Id}-${i}`}
-                      style={{
-                        background: t.isDuplicate ? '#f9f9f9' : i % 2 === 0 ? '#fff' : '#faf8ff',
-                        opacity: t.isDuplicate ? 0.45 : 1,
-                      }}
-                    >
-                      <td style={cellSx}>{t.createdAt}</td>
-                      <td style={{ ...cellSx, fontWeight: 700, color: '#6d28d9' }}>{t.pair}</td>
-                      <td style={cellSx}>{t.orderType}</td>
-                      <td style={{ ...cellSx, fontFamily: 'monospace' }}>{t.entryPoint}</td>
-                      <td style={{ ...cellSx, fontFamily: 'monospace' }}>{t.stopLoss || '—'}</td>
-                      <td style={{ ...cellSx, fontFamily: 'monospace' }}>{t.takeProfit || '—'}</td>
-                      <td style={{ ...cellSx, fontWeight: 700, color: resultColor(t.result), fontFamily: 'monospace' }}>
-                        {t.result >= 0 ? `+$${t.result.toFixed(2)}` : `-$${Math.abs(t.result).toFixed(2)}`}
-                      </td>
-                      <td style={{ ...cellSx, fontSize: '0.65rem', color: '#9ca3af' }}>
-                        {t.isDuplicate ? 'duplicada' : ''}
-                      </td>
-                    </tr>
-                  ))}
+                  {allItems.map((t, i) => {
+                    const isDeposit = t.orderType === 'Depósito';
+                    return (
+                      <tr
+                        key={`${t.mt5Id ?? 'dep'}-${i}`}
+                        style={{
+                          background: t.isDuplicate
+                            ? '#f9f9f9'
+                            : isDeposit
+                              ? '#fffbeb'
+                              : i % 2 === 0 ? '#fff' : '#faf8ff',
+                          opacity: t.isDuplicate ? 0.45 : 1,
+                        }}
+                      >
+                        <td style={cellSx}>{t.createdAt}</td>
+                        <td style={{ ...cellSx, fontWeight: 700, color: isDeposit ? '#92400e' : '#6d28d9' }}>{t.pair}</td>
+                        <td style={cellSx}>{t.orderType}</td>
+                        <td style={{ ...cellSx, fontFamily: 'monospace' }}>{isDeposit ? '—' : t.risk}</td>
+                        <td style={{ ...cellSx, fontFamily: 'monospace' }}>{isDeposit ? '—' : t.entryPoint}</td>
+                        <td style={{ ...cellSx, fontFamily: 'monospace' }}>{isDeposit || !t.stopLoss  ? '—' : t.stopLoss}</td>
+                        <td style={{ ...cellSx, fontFamily: 'monospace' }}>{isDeposit || !t.takeProfit ? '—' : t.takeProfit}</td>
+                        <td style={{ ...cellSx, fontFamily: 'monospace', color: (t.swap ?? 0) < 0 ? '#dc2626' : '#6b7280' }}>
+                          {isDeposit ? '—' : ((t.swap ?? 0) !== 0 ? fmtResult(t.swap) : '—')}
+                        </td>
+                        <td style={{ ...cellSx, fontWeight: 700, color: resultColor(t.result), fontFamily: 'monospace' }}>
+                          {fmtResult(t.result)}
+                        </td>
+                        <td style={{ ...cellSx, fontSize: '0.65rem', color: '#9ca3af' }}>
+                          {t.isDuplicate ? 'duplicada' : ''}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -223,13 +271,17 @@ export default function MT5ImportModal({ open, onClose }) {
         <button
           className="tt-btn-primary"
           onClick={handleImport}
-          disabled={saving || !newTrades.length}
+          disabled={saving || !newItems.length}
         >
           {saving
             ? <CircularProgress size={14} thickness={5} sx={{ color: 'inherit' }} />
             : <SaveRoundedIcon sx={{ fontSize: 15 }} />
           }
-          {saving ? 'Importando…' : `Importar ${newTrades.length} operaciones`}
+          {saving
+            ? 'Importando…'
+            : newItems.length
+              ? `Importar ${newItems.length} registro${newItems.length !== 1 ? 's' : ''}`
+              : 'Sin registros nuevos'}
         </button>
       </DialogActions>
     </Dialog>

@@ -12,7 +12,7 @@ import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 
 const COLUMNS = [
-  'Tipo Orden', 'Par', 'Riesgo', 'Precio',
+  'Tipo Orden', 'Par', 'Lotaje', 'Precio',
   'Take Profit', 'Stop Loss', 'Señal', 'Resultado', 'Observaciones', 'Acciones',
 ];
 

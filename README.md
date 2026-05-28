@@ -137,6 +137,8 @@ CREATE TABLE trades (
   order_type    TEXT NOT NULL DEFAULT 'Market',
   signal_source TEXT NOT NULL DEFAULT 'M71',
   result        NUMERIC(10,2) NOT NULL DEFAULT 0,
+  swap          NUMERIC(10,2) NOT NULL DEFAULT 0,
+  open_time     TIMESTAMPTZ,
   observations  TEXT DEFAULT '',
   created_at    DATE NOT NULL DEFAULT CURRENT_DATE,
   updated_at    TIMESTAMPTZ DEFAULT NOW()
@@ -148,8 +150,9 @@ CREATE TABLE user_settings (
   updated_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_trades_user_id   ON trades(user_id);
-CREATE INDEX idx_trades_created_at ON trades(created_at);
+CREATE INDEX idx_trades_user_id    ON trades(user_id);
+CREATE INDEX idx_trades_created_at  ON trades(created_at);
+CREATE INDEX idx_trades_open_time   ON trades(open_time) WHERE open_time IS NOT NULL;
 
 -- ROW LEVEL SECURITY
 ALTER TABLE trades        ENABLE ROW LEVEL SECURITY;
@@ -164,3 +167,16 @@ CREATE POLICY "settings_select_own" ON user_settings FOR SELECT USING (auth.uid(
 CREATE POLICY "settings_upsert_own" ON user_settings FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "settings_update_own" ON user_settings FOR UPDATE USING (auth.uid() = user_id);
 ```
+
+## Migraciones
+
+Si ya tienes la tabla `trades` creada y necesitas añadir los campos de la importación MT5:
+
+```sql
+-- Migración v2 — swap + open_time (importación MT5)
+ALTER TABLE trades ADD COLUMN IF NOT EXISTS swap      NUMERIC(10,2) NOT NULL DEFAULT 0;
+ALTER TABLE trades ADD COLUMN IF NOT EXISTS open_time TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS idx_trades_open_time ON trades(open_time) WHERE open_time IS NOT NULL;
+```
+
+> Ejecuta esto en **Supabase → SQL Editor** antes de usar el botón "Importar MT5".

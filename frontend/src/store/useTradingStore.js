@@ -1,10 +1,14 @@
 import { create } from 'zustand';
 import * as api from '../services/api.js';
 
-// Ordena: fecha desc → id desc (desempate entre ops del mismo día)
+// Ordena: openTime (ISO datetime) si existe, si no createdAt (fecha) → id desc (desempate)
+// openTime viene del campo open_time de Supabase y tiene precisión de segundos,
+// lo que permite ordenar correctamente varias ops del mismo día importadas desde MT5.
 const sortDesc = (ops) =>
   [...ops].sort((a, b) => {
-    const d = (b.createdAt || '').localeCompare(a.createdAt || '');
+    const aKey = a.openTime || a.createdAt || '';
+    const bKey = b.openTime || b.createdAt || '';
+    const d = bKey.localeCompare(aKey);
     return d !== 0 ? d : (b.id || '').localeCompare(a.id || '');
   });
 
