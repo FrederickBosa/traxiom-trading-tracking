@@ -1,8 +1,83 @@
 @use "../../settings/variables";
 
-$sectionSpecificName: "equity-chart";
+// ─── EQUITY LINE (curva de capital con filtros) ───────────────────────────────
 
-.#{variables.$component}-#{$sectionSpecificName} {
+.tt-equity-line {
+  display: flex;
+  flex-direction: column;
+  flex: 1;           // llena el espacio restante del chart-block
+  min-height: 0;     // necesario para que flex funcione con height:100% en recharts
   width: 100%;
-  flex: 1;
+
+  // ── Header: título + pills de filtro ─────────────────────────────────────
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+  }
+
+  &__title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: variables.$text-secondary;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  // ── Filtros ───────────────────────────────────────────────────────────────
+
+  &__filters {
+    display: flex;
+    gap: 3px;
+  }
+
+  &__filter-btn {
+    all: unset;
+    box-sizing: border-box;
+    font-size: 0.595rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    cursor: pointer;
+    border: 1px solid variables.$border-subtle;
+    background: variables.$color-accent-lighter;
+    color: variables.$text-muted;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    letter-spacing: 0.04em;
+    line-height: 1.7;
+    white-space: nowrap;
+
+    &:hover:not(&--active) {
+      background: variables.$color-accent-light;
+      border-color: variables.$border-default;
+      color: variables.$color-accent;
+    }
+
+    &:focus-visible {
+      outline: 2px solid variables.$color-accent;
+      outline-offset: 2px;
+    }
+
+    &--active {
+      background: variables.$color-accent;
+      color: #fff;
+      border-color: variables.$color-accent;
+
+      &:hover {
+        background: #6d28d9;
+        border-color: #6d28d9;
+      }
+    }
+  }
+
+  // ── Área de la gráfica — crece para llenar espacio restante ──────────────
+
+  &__chart {
+    flex: 1;
+    min-height: 120px;
+  }
 }

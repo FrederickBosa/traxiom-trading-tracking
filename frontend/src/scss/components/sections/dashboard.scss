@@ -97,10 +97,11 @@ $sectionSpecificName: "dashboard";
     background-color: variables.$bg-card;
     border: 1px solid variables.$border-subtle;
     border-radius: 16px;
-    padding: 16px 20px 8px;
+    padding: 16px 20px 12px;
     box-shadow: variables.$shadow-card;
     display: flex;
     flex-direction: column;
+    min-height: 0;   // permite que los hijos flex con height:100% funcionen en Recharts
   }
 
   &__chart-block-title {

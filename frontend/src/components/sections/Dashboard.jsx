@@ -223,11 +223,23 @@ function Dashboard() {
 
         {/* Tarjeta derecha: curva de capital */}
         <div className="tt-dashboard__chart-block">
-          <p className="tt-dashboard__chart-block-title">Curva de capital</p>
-          {loading
-            ? <Skeleton variant="rounded" width="100%" height={90} />
-            : <EquityLine equityCurve={equityCurve} initialBalance={capitalTotal} />
-          }
+          {loading ? (
+            <>
+              {/* Skeleton del header (título + pills) */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexShrink: 0 }}>
+                <Skeleton variant="text" width={110} height={16} />
+                <div style={{ display: 'flex', gap: 3 }}>
+                  {[28, 28, 28, 38].map((w, i) => (
+                    <Skeleton key={i} variant="rounded" width={w} height={18} sx={{ borderRadius: '20px' }} />
+                  ))}
+                </div>
+              </div>
+              {/* Skeleton del chart */}
+              <Skeleton variant="rounded" width="100%" sx={{ flex: 1, minHeight: 120 }} />
+            </>
+          ) : (
+            <EquityLine equityCurve={equityCurve} initialBalance={capitalTotal} />
+          )}
         </div>
       </section>
 
