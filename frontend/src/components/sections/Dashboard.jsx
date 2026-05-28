@@ -14,7 +14,7 @@ const DEPOSIT_TYPES = ['Depósito', 'Crédito'];
 function BalanceSummarySkeleton() {
   return (
     <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid #ede9fe', display: 'flex', flexDirection: 'column', gap: 7 }}>
-      {Array.from({ length: 6 }).map((_, i) => (
+      {Array.from({ length: 5 }).map((_, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Skeleton variant="text" width={65} height={13} />
           <Skeleton variant="text" sx={{ flex: 1 }} height={2} />
@@ -216,8 +216,6 @@ function Dashboard() {
                 <SummaryRow label="Depósito"  value={fmtM(depositTotal)} />
                 <SummaryRow label="Swap"      value={fmtSign(swapTotal)} color={pc(swapTotal)} />
                 <SummaryRow label="Comisión"  value="$0.00" />
-                <div className="tt-dashboard__account-summary-divider" />
-                <SummaryRow label="Balance"   value={`$${balance.toFixed(2)}`} bold />
               </>
             )}
           </div>
