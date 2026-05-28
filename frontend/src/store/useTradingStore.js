@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 import * as api from '../services/api.js';
 
+// Tipos que representan dinero depositado (no trades)
+export const DEPOSIT_TYPES = ['Depósito', 'Crédito'];
+const isDeposit = (op) => DEPOSIT_TYPES.includes(op.orderType);
+const isTrade   = (op) => !DEPOSIT_TYPES.includes(op.orderType);
+
 // Ordena: openTime (ISO datetime) si existe, si no createdAt (fecha) → id desc (desempate)
 // openTime viene del campo open_time de Supabase y tiene precisión de segundos,
 // lo que permite ordenar correctamente varias ops del mismo día importadas desde MT5.
@@ -99,10 +104,9 @@ const useTradingStore = create((set, get) => ({
 
   getEquityCurve: () => {
     const { operations } = get();
-    const deposits     = operations.filter((op) => op.orderType === 'Depósito');
-    const depositTotal = deposits.reduce((acc, op) => acc + (op.result || 0), 0);
+    const depositTotal = operations.filter(isDeposit).reduce((acc, op) => acc + (op.result || 0), 0);
     // Orden cronológico (el store guarda DESC) + swap incluido
-    const trades = [...operations.filter((op) => op.orderType !== 'Depósito')].reverse();
+    const trades = [...operations.filter(isTrade)].reverse();
     let running = depositTotal;
     const curve = [{ trade: 0, balance: depositTotal }];
     trades.forEach((op, i) => {
@@ -115,9 +119,9 @@ const useTradingStore = create((set, get) => ({
   // ─── Estadísticas completas (estilo myfxbook) ─────────────────────────────
   getStats: () => {
     const { operations } = get();
-    const deposits = operations.filter((op) => op.orderType === 'Depósito');
+    const deposits = operations.filter(isDeposit);
     // Cronológico para drawdown y racha
-    const trades   = [...operations.filter((op) => op.orderType !== 'Depósito')].reverse();
+    const trades   = [...operations.filter(isTrade)].reverse();
     if (!trades.length) return null;
 
     const depositTotal = deposits.reduce((s, op) => s + (op.result || 0), 0);

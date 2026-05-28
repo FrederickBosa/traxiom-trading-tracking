@@ -11,14 +11,14 @@ function TradeRow({ trade, onEdit }) {
     : trade.result < 0
       ? `-$${Math.abs(trade.result)}`
       : 'Open';
-  const isDeposit = trade.orderType === 'Depósito';
+  const isDeposit = trade.orderType === 'Depósito' || trade.orderType === 'Crédito';
 
   // ── Fila de depósito ─────────────────────────────────────────────────────
   if (isDeposit) {
     return (
       <tr className="tt-trade-row tt-trade-row--deposit">
         <td className="tt-trade-row__cell" colSpan={7}>
-          <span className="tt-trade-row__deposit-label">Depósito</span>
+          <span className="tt-trade-row__deposit-label">{trade.orderType}</span>
         </td>
         <td className="tt-trade-row__cell">
           <span className="tt-trade-row__result-badge tt-trade-row__result-badge--deposit">

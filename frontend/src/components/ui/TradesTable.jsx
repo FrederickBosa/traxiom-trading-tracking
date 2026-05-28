@@ -44,7 +44,7 @@ function TradesTable({ loading }) {
 
   const openNew     = () => { setModal({ open: true, trade: null, isDeposit: false }); setPage(1); };
   const openDeposit = () => { setModal({ open: true, trade: null, isDeposit: true  }); setPage(1); };
-  const openEdit    = (trade) => setModal({ open: true, trade, isDeposit: trade.orderType === 'Depósito' });
+  const openEdit    = (trade) => setModal({ open: true, trade, isDeposit: ['Depósito', 'Crédito'].includes(trade.orderType) });
   const closeModal  = () => setModal((m) => ({ ...m, open: false }));
 
   // Páginas totales; si la página activa queda vacía tras un borrado, la corrige
@@ -167,7 +167,7 @@ function TradesTable({ loading }) {
                 borderRadius: '12px',
                 boxShadow: '0 8px 28px rgba(109,77,209,0.18)',
                 border: '1px solid #ede9fe',
-                minWidth: 196,
+                minWidth: 178,
                 mt: '4px',
               },
             },
@@ -177,51 +177,49 @@ function TradesTable({ loading }) {
           <MenuItem
             onClick={() => { setImportOpen(true); closeMobileMenu(); }}
             sx={{
-              fontSize: '0.825rem',
+              fontSize: '0.8rem',
               fontWeight: 500,
-              py: 1.25, px: 2, gap: 1.5,
+              py: 0.875, px: 1.5, gap: 1,
               color: '#6b7280',
               '&:hover': { background: '#f5f3ff', color: '#4b5563' },
             }}
           >
-            <ListItemIcon sx={{ minWidth: 'auto', color: '#9ca3af' }}>
-              <FileUploadRoundedIcon sx={{ fontSize: 18 }} />
+            <ListItemIcon sx={{ minWidth: 18, mr: 0.25, color: '#9ca3af' }}>
+              <FileUploadRoundedIcon sx={{ fontSize: 16 }} />
             </ListItemIcon>
             Importar MT5
           </MenuItem>
-          <Divider sx={{ my: 0.5, borderColor: '#ede9fe' }} />
+          <Divider sx={{ my: 0.25, borderColor: '#ede9fe' }} />
           {/* Secondary — Depósito */}
           <MenuItem
             onClick={() => { openDeposit(); closeMobileMenu(); }}
             sx={{
-              fontSize: '0.825rem',
+              fontSize: '0.8rem',
               fontWeight: 600,
-              py: 1.25, px: 2, gap: 1.5,
+              py: 0.875, px: 1.5, gap: 1,
               color: '#6d28d9',
               '&:hover': { background: 'rgba(109,40,217,0.06)' },
             }}
           >
-            <ListItemIcon sx={{ minWidth: 'auto', color: '#7c3aed' }}>
-              <AccountBalanceWalletRoundedIcon sx={{ fontSize: 18 }} />
+            <ListItemIcon sx={{ minWidth: 18, mr: 0.25, color: '#7c3aed' }}>
+              <AccountBalanceWalletRoundedIcon sx={{ fontSize: 16 }} />
             </ListItemIcon>
             Depósito
           </MenuItem>
-          {/* Primary — Nueva Operación */}
+          {/* Primary — Nueva Operación (bold purple text, left accent) */}
           <MenuItem
             onClick={() => { openNew(); closeMobileMenu(); }}
             sx={{
-              fontSize: '0.825rem',
+              fontSize: '0.8rem',
               fontWeight: 700,
-              py: 1, px: 2, gap: 1.5,
-              mx: 1, mb: 1, mt: 0.5,
-              borderRadius: '8px',
-              color: '#fff',
-              background: '#7c3aed',
-              '&:hover': { background: '#6d28d9' },
+              py: 0.875, px: 1.5, gap: 1,
+              color: '#7c3aed',
+              borderLeft: '2.5px solid #7c3aed',
+              '&:hover': { background: 'rgba(124,58,237,0.06)' },
             }}
           >
-            <ListItemIcon sx={{ minWidth: 'auto', color: '#fff' }}>
-              <AddRoundedIcon sx={{ fontSize: 18 }} />
+            <ListItemIcon sx={{ minWidth: 18, mr: 0.25, color: '#7c3aed' }}>
+              <AddRoundedIcon sx={{ fontSize: 16 }} />
             </ListItemIcon>
             Nueva Operación
           </MenuItem>

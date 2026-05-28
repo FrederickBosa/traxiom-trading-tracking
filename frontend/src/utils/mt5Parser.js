@@ -184,9 +184,10 @@ function parseDealsSection(doc, positionMap) {
 
     // ── Depósitos / créditos ─────────────────────────────────────────
     if (type === 'balance' || type === 'credit') {
+      const isCredit = type === 'credit';
       deposits.push({
-        pair:         'Depósito',
-        orderType:    'Depósito',
+        pair:         isCredit ? 'Crédito' : 'Depósito',
+        orderType:    isCredit ? 'Crédito' : 'Depósito',
         entryPoint:   0,
         takeProfit:   0,
         stopLoss:     0,
@@ -196,7 +197,7 @@ function parseDealsSection(doc, positionMap) {
         openTime:     parseDateTime(time),
         createdAt:    parseDate(time),
         signalSource: 'MT5 Import',
-        observations: comment || (type === 'credit' ? 'Crédito MT5' : 'Depósito MT5'),
+        observations: comment || (isCredit ? 'Crédito MT5' : 'Depósito MT5'),
       });
       continue;
     }

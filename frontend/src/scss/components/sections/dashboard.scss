@@ -34,7 +34,6 @@ $sectionSpecificName: "dashboard";
     display: flex;
     flex-direction: column;
     gap: 4px;
-    justify-content: center;
   }
 
   &__balance-label {
@@ -112,6 +111,66 @@ $sectionSpecificName: "dashboard";
     letter-spacing: -0.01em;
   }
 
+  // ─── ACCOUNT SUMMARY (inside balance block) ──────────────────────────────
+
+  &__account-summary {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid variables.$border-subtle;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__account-summary-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__account-summary-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: variables.$text-secondary;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &--bold {
+      font-weight: 800;
+      color: variables.$text-primary;
+    }
+  }
+
+  // Separador de puntos: radio-gradient para imitar dots uniformes
+  &__account-summary-sep {
+    flex: 1;
+    height: 2px;
+    background-image: radial-gradient(circle, rgba(196, 181, 253, 0.55) 1px, transparent 1px);
+    background-size: 5px 2px;
+    background-repeat: repeat-x;
+    background-position: center;
+  }
+
+  &__account-summary-value {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    font-family: variables.$font-mono;
+    color: variables.$text-primary;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &--bold {
+      font-size: 0.8125rem;
+      font-weight: 800;
+    }
+  }
+
+  &__account-summary-divider {
+    height: 1px;
+    background: variables.$border-subtle;
+    margin: 2px 0;
+  }
+
   // ─── STATS ROW (3 equal cards) ────────────────────────────────────────────
 
   &__stats-row {
@@ -142,6 +201,17 @@ $sectionSpecificName: "dashboard";
     color: variables.$text-secondary;
     margin: 0 0 10px;
     letter-spacing: -0.01em;
+    flex-shrink: 0;
+  }
+
+  // Wrapper que centra verticalmente el contenido del stat-card
+  &__stat-card-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    width: 100%;
   }
 
   // ─── METRICS ROW (KPI grid wrapper) ─────────────────────────────────────
