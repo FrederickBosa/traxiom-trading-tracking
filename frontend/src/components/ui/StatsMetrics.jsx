@@ -54,7 +54,7 @@ function buildInfo(stats, depositTotal) {
       interpretation:
         `De ${totalTrades} trades, ganaste ${winners} (${winRate.toFixed(1)}%) y perdiste ${losers} (${(100 - winRate).toFixed(1)}%). ${
           brkevenWR != null
-            ? `Con tu R:R actual de ${rr!.toFixed(2)}, el break-even teórico es al ${brkevenWR.toFixed(1)}% de acierto — ${winRate >= brkevenWR ? 'lo estás superando ✓' : 'estás por debajo ✗'}.`
+            ? `Con tu R:R actual de ${rr.toFixed(2)}, el break-even teórico es al ${brkevenWR.toFixed(1)}% de acierto — ${winRate >= brkevenWR ? 'lo estás superando ✓' : 'estás por debajo ✗'}.`
             : ''
         }`,
       scale: [
