@@ -3,8 +3,10 @@ import Skeleton from '@mui/material/Skeleton';
 import Pagination from '@mui/material/Pagination';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded';
+import FileUploadRoundedIcon from '@mui/icons-material/FileUploadRounded';
 import TradeRow from './TradeRow';
 import TradeFormModal from './TradeFormModal';
+import MT5ImportModal from './MT5ImportModal';
 import useTradingStore from '../../store/useTradingStore';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
@@ -26,8 +28,9 @@ function TradesTable({ loading }) {
   const tourShown       = useRef(false); // evita doble disparo por re-renders
 
   // ── Estado del modal ───────────────────────────────────────────────────────
-  const [modal, setModal] = useState({ open: false, trade: null, isDeposit: false });
-  const [page,  setPage]  = useState(1);
+  const [modal,     setModal]     = useState({ open: false, trade: null, isDeposit: false });
+  const [importOpen, setImportOpen] = useState(false);
+  const [page,      setPage]      = useState(1);
 
   const openNew     = () => { setModal({ open: true, trade: null, isDeposit: false }); setPage(1); };
   const openDeposit = () => { setModal({ open: true, trade: null, isDeposit: true  }); setPage(1); };
@@ -106,6 +109,10 @@ function TradesTable({ loading }) {
       <div className="tt-trades-table__toolbar">
         <h2 className="tt-trades-table__title">Operaciones</h2>
         <div className="tt-trades-table__actions">
+          <button className="tt-btn-ghost" onClick={() => setImportOpen(true)}>
+            <FileUploadRoundedIcon sx={{ fontSize: 16 }} />
+            Importar MT5
+          </button>
           <button id="tt-deposit-btn" className="tt-btn-secondary" onClick={openDeposit}>
             <AccountBalanceWalletRoundedIcon sx={{ fontSize: 16 }} />
             Depósito
@@ -188,6 +195,12 @@ function TradesTable({ loading }) {
            key cambia cada vez que el modal abre con un contexto distinto
            → React remonta el componente con estado fresco sin necesidad
              de useEffect que llame setState (warning del React Compiler) ── */}
+      <MT5ImportModal
+        key={importOpen ? 'mt5-open' : 'mt5-closed'}
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+      />
+
       <TradeFormModal
         key={modal.open ? `${modal.trade?.id ?? 'new'}-${modal.isDeposit}` : 'closed'}
         open={modal.open}

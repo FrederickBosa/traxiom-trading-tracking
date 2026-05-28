@@ -105,6 +105,31 @@ export async function updateTrade(req, res, next) {
   }
 }
 
+export async function importTrades(req, res, next) {
+  try {
+    const trades = req.body;
+    if (!Array.isArray(trades) || trades.length === 0) {
+      return res.status(400).json({ error: 'Array de trades requerido' });
+    }
+
+    const clientDate = req.headers['x-client-date'];
+    const payload    = trades.map((t) => ({
+      ...toSnake(t, clientDate),
+      user_id: req.user.id,
+    }));
+
+    const { data, error } = await supabase
+      .from('trades')
+      .insert(payload)
+      .select();
+
+    if (error) throw error;
+    res.status(201).json(data.map(toCamel));
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function deleteTrade(req, res, next) {
   try {
     const { id } = req.params;

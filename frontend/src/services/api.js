@@ -45,3 +45,6 @@ export const updateTrade = (id, trade) =>
 
 export const deleteTrade = (id) =>
   authFetch(`/trades/${id}`, { method: 'DELETE' });
+
+export const importTrades = (trades) =>
+  authFetch('/trades/import', { method: 'POST', body: JSON.stringify(trades) });

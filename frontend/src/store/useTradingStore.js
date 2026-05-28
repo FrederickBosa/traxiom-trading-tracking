@@ -59,6 +59,22 @@ const useTradingStore = create((set, get) => ({
     }
   },
 
+  importOperations: async (trades) => {
+    try {
+      const imported = await api.importTrades(trades);
+      set((state) => ({
+        operations: sortDesc([
+          ...imported.map((t) => ({ ...t, isEditing: false })),
+          ...state.operations,
+        ]),
+      }));
+      return imported.length;
+    } catch (err) {
+      set({ error: err.message });
+      throw err;
+    }
+  },
+
   deleteOperation: async (id) => {
     set((state) => ({
       operations: state.operations.filter((op) => op.id !== id),
