@@ -112,7 +112,7 @@ function Dashboard() {
           ? <MetricsSkeleton />
           : (
             <div className="tt-dashboard__metrics-row">
-              <StatsMetrics stats={stats} />
+              <StatsMetrics stats={stats} depositTotal={depositTotal} />
             </div>
           )
         }
