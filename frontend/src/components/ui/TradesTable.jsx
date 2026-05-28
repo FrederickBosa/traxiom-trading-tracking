@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import Skeleton from '@mui/material/Skeleton';
 import Pagination from '@mui/material/Pagination';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Divider from '@mui/material/Divider';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import AccountBalanceWalletRoundedIcon from '@mui/icons-material/AccountBalanceWalletRounded';
 import FileUploadRoundedIcon from '@mui/icons-material/FileUploadRounded';
+import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import TradeRow from './TradeRow';
 import TradeFormModal from './TradeFormModal';
 import MT5ImportModal from './MT5ImportModal';
@@ -28,9 +33,14 @@ function TradesTable({ loading }) {
   const tourShown       = useRef(false); // evita doble disparo por re-renders
 
   // ── Estado del modal ───────────────────────────────────────────────────────
-  const [modal,     setModal]     = useState({ open: false, trade: null, isDeposit: false });
-  const [importOpen, setImportOpen] = useState(false);
-  const [page,      setPage]      = useState(1);
+  const [modal,            setModal]            = useState({ open: false, trade: null, isDeposit: false });
+  const [importOpen,       setImportOpen]       = useState(false);
+  const [page,             setPage]             = useState(1);
+  const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
+
+  const mobileMenuOpen   = Boolean(mobileMenuAnchor);
+  const openMobileMenu   = (e) => setMobileMenuAnchor(e.currentTarget);
+  const closeMobileMenu  = () => setMobileMenuAnchor(null);
 
   const openNew     = () => { setModal({ open: true, trade: null, isDeposit: false }); setPage(1); };
   const openDeposit = () => { setModal({ open: true, trade: null, isDeposit: true  }); setPage(1); };
@@ -108,7 +118,9 @@ function TradesTable({ loading }) {
       {/* ── Toolbar ── */}
       <div className="tt-trades-table__toolbar">
         <h2 className="tt-trades-table__title">Operaciones</h2>
-        <div className="tt-trades-table__actions">
+
+        {/* Desktop (≥768px): tres botones separados */}
+        <div className="tt-trades-table__actions tt-trades-table__actions--desktop">
           <button className="tt-btn-ghost" onClick={() => setImportOpen(true)}>
             <FileUploadRoundedIcon sx={{ fontSize: 16 }} />
             Importar MT5
@@ -122,6 +134,74 @@ function TradesTable({ loading }) {
             Nueva Operación
           </button>
         </div>
+
+        {/* Mobile (<768px): botón "Añadir" + menú desplegable */}
+        <div className="tt-trades-table__actions tt-trades-table__actions--mobile">
+          <button
+            className="tt-btn-primary"
+            onClick={openMobileMenu}
+            aria-haspopup="menu"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="tt-mobile-actions-menu"
+          >
+            <AddRoundedIcon sx={{ fontSize: 16 }} />
+            Añadir
+            <KeyboardArrowDownRoundedIcon
+              sx={{ fontSize: 14 }}
+              style={{ marginLeft: 2, transition: 'transform 0.15s', transform: mobileMenuOpen ? 'rotate(180deg)' : 'none' }}
+            />
+          </button>
+        </div>
+
+        {/* Menú desplegable mobile */}
+        <Menu
+          id="tt-mobile-actions-menu"
+          anchorEl={mobileMenuAnchor}
+          open={mobileMenuOpen}
+          onClose={closeMobileMenu}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          slotProps={{
+            paper: {
+              sx: {
+                borderRadius: '12px',
+                boxShadow: '0 8px 28px rgba(109,77,209,0.18)',
+                border: '1px solid #ede9fe',
+                minWidth: 196,
+                mt: '4px',
+              },
+            },
+          }}
+        >
+          <MenuItem
+            onClick={() => { setImportOpen(true); closeMobileMenu(); }}
+            sx={{ fontSize: '0.825rem', py: 1.25, px: 2, gap: 1.5, color: '#374151' }}
+          >
+            <ListItemIcon sx={{ minWidth: 'auto', color: '#6b7280' }}>
+              <FileUploadRoundedIcon sx={{ fontSize: 18 }} />
+            </ListItemIcon>
+            Importar MT5
+          </MenuItem>
+          <Divider sx={{ my: 0.5, borderColor: '#ede9fe' }} />
+          <MenuItem
+            onClick={() => { openDeposit(); closeMobileMenu(); }}
+            sx={{ fontSize: '0.825rem', py: 1.25, px: 2, gap: 1.5, color: '#374151' }}
+          >
+            <ListItemIcon sx={{ minWidth: 'auto', color: '#7c3aed' }}>
+              <AccountBalanceWalletRoundedIcon sx={{ fontSize: 18 }} />
+            </ListItemIcon>
+            Depósito
+          </MenuItem>
+          <MenuItem
+            onClick={() => { openNew(); closeMobileMenu(); }}
+            sx={{ fontSize: '0.825rem', fontWeight: 600, py: 1.25, px: 2, gap: 1.5, color: '#7c3aed' }}
+          >
+            <ListItemIcon sx={{ minWidth: 'auto', color: '#7c3aed' }}>
+              <AddRoundedIcon sx={{ fontSize: 18 }} />
+            </ListItemIcon>
+            Nueva Operación
+          </MenuItem>
+        </Menu>
       </div>
 
       {/* ── Tabla ── */}

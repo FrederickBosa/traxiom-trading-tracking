@@ -23,6 +23,24 @@ $sectionSpecificName: "trades-table";
     display: flex;
     align-items: center;
     gap: 8px;
+
+    // Desktop: visible en tablet+, oculto en mobile
+    &--desktop {
+      display: none;
+
+      @include media-query.medias(tablet_desktop) {
+        display: flex;
+      }
+    }
+
+    // Mobile: visible sólo en mobile, oculto en tablet+
+    &--mobile {
+      display: flex;
+
+      @include media-query.medias(tablet_desktop) {
+        display: none;
+      }
+    }
   }
 
   &__title {
